@@ -1,0 +1,10 @@
+{
+	"id": "notetaking-sidekick",
+	"name": "Notetaking Sidekick",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "A GPT-4o powered sidekick to enhance note taking within Obsidian.",
+	"author": "Kyle Kingsberry",
+	"authorUrl": "https://www.linkedin.com/in/kyle-kingsberry-9690a7109/",
+	"isDesktopOnly": false
+}

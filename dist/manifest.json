@@ -6,5 +6,5 @@
 	"description": "A GPT-4o powered sidekick to enhance note taking within Obsidian.",
 	"author": "Kyle Kingsberry",
 	"authorUrl": "https://www.linkedin.com/in/kyle-kingsberry-9690a7109/",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }

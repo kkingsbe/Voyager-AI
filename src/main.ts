@@ -1,22 +1,27 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
-// Remember to rename these classes and interfaces!
+import { Notice, Plugin, TFile } from 'obsidian';
+import { SearchEngine } from 'searchengine';
+import { v4 as uuidv4 } from 'uuid';
+import { debounce } from 'lodash';
+import { ContextualSearchModal } from 'modals/contextualsearchmodal';
+import { SettingsTab } from 'views/settingsTab';
+import { ChatPanelView } from 'views/chatPanelView';
 
 interface MyPluginSettings {
-	mySetting: string;
+	apiKey: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+	apiKey: ''
 }
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
+	searchEngine: SearchEngine;
 
 	async onload() {
-		new Notice("notetaking-sidekick hot reload")
-
 		await this.loadSettings();
+		
+		new Notice("notetaking-sidekick loaded");
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
@@ -30,45 +35,14 @@ export default class MyPlugin extends Plugin {
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText('Status Bar Text');
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+		this.registerView("chat-panel", (leaf) => new ChatPanelView(leaf))
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
+		this.app.workspace.onLayoutReady(() => {
+			this.addChatPanel()
+		})
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new SettingsTab(this.app, this));
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
@@ -78,10 +52,92 @@ export default class MyPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+
+		this.searchEngine = new SearchEngine(this.app, this.settings.apiKey);
+
+		// Register event to embed document when saved
+		const debouncedEmbed = debounce(() => {
+			if (this.app.workspace.getActiveFile()) {
+				new Notice("Voyager: Embedding document " + this.app.workspace.getActiveFile()?.name);
+				this.embedActiveDocument();
+			}
+		}, 10000); // Adjust the debounce delay as needed
+
+		this.registerEvent(
+			this.app.vault.on('modify', (file: TFile) => {
+				if (file === this.app.workspace.getActiveFile()) {
+					debouncedEmbed();
+				}
+			})
+		);
+
+		this.addCommand({
+			id: 'contextual-search',
+			name: 'Voyager: Contextual Search',
+			callback: () => {
+				new ContextualSearchModal(this.app, this.searchEngine).open();
+			}
+		});
+
+		this.addCommand({
+			id: 'embed-all',
+			name: 'Voyager: Embed All',
+			callback: () => {
+				this.embedAllDocuments();
+			}
+		})
+	}
+
+	async embedActiveDocument() {
+		const activeFile = this.app.workspace.getActiveFile();
+		console.log("Embedding active document", activeFile);
+		if (activeFile) {
+			const content = await this.app.vault.read(activeFile);
+			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+			let voyagerId = frontmatter?.['voyager-id'];
+			
+			if (!voyagerId) {
+				voyagerId = uuidv4();
+				await this.app.fileManager.processFrontMatter(activeFile, (fm) => {
+					fm['voyager-id'] = voyagerId;
+				});
+			}
+			
+			await this.searchEngine.embedDocument(activeFile.name, content, voyagerId);
+		}
+	}
+
+	async embedAllDocuments() {
+		const allFiles = this.app.vault.getAllLoadedFiles();
+		let i = 0;
+		for (const file of allFiles) {
+			if (file instanceof TFile && !['canvas', 'html', 'png', 'jpg', 'jpeg', '.pdf'].includes(file.extension)) {
+				const content = await this.app.vault.read(file);
+				const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+				let voyagerId = frontmatter?.['voyager-id'];
+				
+				if (!voyagerId) {
+					voyagerId = uuidv4();
+					await this.app.fileManager.processFrontMatter(file, (fm) => {
+						fm['voyager-id'] = voyagerId;
+					});
+				}
+
+				console.log("Content: ", content)
+				await this.searchEngine.embedDocument(file.name, content, voyagerId);
+				i++;
+				console.log(`Embedded ${i}/${allFiles.length} documents`);
+			}
+		}
+	}
+
+	addChatPanel() {
+		const leaf = this.app.workspace.getRightLeaf(false)
+		leaf?.setViewState({ type: 'chat-panel' })
 	}
 
 	onunload() {
-
+		this.app.workspace.detachLeavesOfType('chat-panel')
 	}
 
 	async loadSettings() {
@@ -90,47 +146,6 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+		this.searchEngine.updateApiKey(this.settings.apiKey);
 	}
 }

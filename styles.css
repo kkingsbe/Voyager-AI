@@ -6,3 +6,150 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.contextual-search-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    margin-top: 20px; /* Add this line to create space above the search bar */
+    font-size: 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    transition: all 0.3s ease;
+}
+
+.contextual-search-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-result-card {
+    padding: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    transition: background-color 0.3s, transform 0.3s ease, box-shadow 0.3s ease; /* Add transform transition with ease */
+    cursor: pointer;
+    position: relative;
+    animation: fadeIn 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+.search-result-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+    color: var(--text-title);
+}
+
+.search-result-score {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.search-result-secondary-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 5px 0;
+}
+
+.contextual-search-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--text-title);
+    text-align: center;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--text-normal);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.no-results {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.contextual-search-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.contextual-search-close-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--background-modifier-border);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.contextual-search-close-button:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.highlight {
+    background-color: yellow;
+    color: black; /* Change text color for better readability */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.enhanced-toggle-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.enhanced-toggle-label {
+    margin-right: 10px;
+    font-size: 16px;
+    color: var(--text-normal);
+}
+
+.enhanced-toggle {
+    width: 20px;
+    height: 20px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    background-color: var(--background-modifier-border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    height: 10px;
+    background-color: var(--text-accent);
+    transition: width 0.3s ease;
+}

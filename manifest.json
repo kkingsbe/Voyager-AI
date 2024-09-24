@@ -1,6 +1,6 @@
 {
-	"id": "notetaking-sidekick",
-	"name": "Notetaking Sidekick",
+	"id": "voyager",
+	"name": "Voyager",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "A GPT-4o powered sidekick to enhance note taking within Obsidian.",

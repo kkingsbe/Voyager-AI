@@ -38,7 +38,7 @@ export default class MyPlugin extends Plugin {
 			id: 'open-chat-modal',
 			name: 'Open Chat Modal',
 			callback: () => {
-				new ChatModal(this.app, this.searchEngine).open();
+				new ChatModal(this.app, this.searchEngine.apiClient).open();
 			}
 		});
 

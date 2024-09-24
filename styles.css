@@ -41,9 +41,18 @@ If your plugin does not need CSS, delete this file.
     overflow: hidden;
 }
 
-.search-result-card:hover {
+.search-result-card:not(.chat-message):hover {
     transform: scale(1.02);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message {
+    cursor: default;
+}
+
+.chat-message:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .search-result-title {

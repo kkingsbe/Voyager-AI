@@ -1,20 +1,19 @@
-import { App, Modal } from "obsidian";
-import { SearchEngine } from "searchengine";
+import { App, Modal, MarkdownRenderer, Component } from "obsidian";
+import { ApiClient } from "apiClient/apiClient";
 
 export class ChatModal extends Modal {
-	private searchEngine: SearchEngine;
+	private apiClient: ApiClient;
 	private inputField: HTMLInputElement;
 	private chatContainer: HTMLElement;
 
-	constructor(app: App, searchEngine: SearchEngine) {
+	constructor(app: App, apiClient: ApiClient) {
 		super(app);
-		this.searchEngine = searchEngine;
+		this.apiClient = apiClient;
 	}
 
 	onOpen() {
 		this.createModalContent();
 		this.inputField.focus();
-		this.inputField.addEventListener('keypress', this.onKeyPress.bind(this));
 	}
 
 	onClose() {
@@ -25,16 +24,24 @@ export class ChatModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		const header = contentEl.createEl('h2', { text: 'Chat with LLM' });
-		header.classList.add('chat-modal-header');
+		const header = contentEl.createEl('h2', { text: 'Chat with Voyager' });
+		header.classList.add('contextual-search-header');
 
 		this.chatContainer = contentEl.createEl('div', { cls: 'chat-container' });
+		this.chatContainer.classList.add('contextual-search-results');
 
 		this.inputField = contentEl.createEl('input', {
 			type: 'text',
 			placeholder: 'Type your message...'
 		});
-		this.inputField.classList.add('chat-input');
+		this.inputField.classList.add('contextual-search-input');
+
+		this.inputField.addEventListener('keypress', this.onKeyPress.bind(this));
+
+		const footer = contentEl.createEl('div', { cls: 'contextual-search-footer' });
+		const closeButton = footer.createEl('button', { text: 'Close' });
+		closeButton.classList.add('contextual-search-close-button');
+		closeButton.addEventListener('click', () => this.close());
 	}
 
 	private async onKeyPress(event: KeyboardEvent) {
@@ -43,15 +50,28 @@ export class ChatModal extends Modal {
 			if (message) {
 				this.addMessageToChat('You', message);
 				this.inputField.value = '';
-				const response = await this.searchEngine.generateBlurb(message, '', '');
-				this.addMessageToChat('LLM', response);
+				try {
+					const response = await this.apiClient.chat(message);
+					this.addMessageToChat('Voyager', response);
+				} catch (error) {
+					console.error('Error in chat:', error);
+					this.addMessageToChat('Error', 'An error occurred while processing your request.');
+				}
 			}
 		}
 	}
 
 	private addMessageToChat(sender: string, message: string) {
-		const messageEl = this.chatContainer.createEl('div', { cls: 'chat-message' });
-		messageEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
+		const messageEl = this.chatContainer.createEl('div', { cls: 'chat-message search-result-card' });
+		const senderEl = messageEl.createEl('strong', { text: sender + ': ', cls: 'search-result-title' });
+		
+		if (sender === 'Voyager') {
+			const contentEl = messageEl.createEl('div', { cls: 'search-result-secondary-text' });
+			MarkdownRenderer.renderMarkdown(message, contentEl, '', this as unknown as Component);
+		} else {
+			const contentEl = messageEl.createEl('span', { text: message, cls: 'search-result-secondary-text' });
+		}
+
 		this.chatContainer.scrollTo(0, this.chatContainer.scrollHeight);
 	}
 }

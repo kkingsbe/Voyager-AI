@@ -8,7 +8,7 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'http://localhost:3000';
+    private baseUrl: string = 'https://voyager-backend.onrender.com' //'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;
@@ -57,6 +57,15 @@ export class ApiClient {
             query,
             title,
             document: content,
+            api_key: this.apiKey
+        });
+
+        return res.data;
+    }
+
+    async chat(query: string) {
+        const res = await axios.post(this.baseUrl + "/search/chat", {
+            query,
             api_key: this.apiKey
         });
 

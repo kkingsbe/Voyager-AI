@@ -3,6 +3,7 @@ import { SearchEngine } from 'searchengine';
 import { v4 as uuidv4 } from 'uuid';
 import { debounce } from 'lodash';
 import { ContextualSearchModal } from 'modals/contextualsearchmodal';
+import { ChatModal } from 'modals/chatmodal';
 import { SettingsTab } from 'views/settingsTab';
 import { ChatPanelView } from 'views/chatPanelView';
 
@@ -31,7 +32,15 @@ export default class MyPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			this.addChatPanel()
-		})
+		});
+
+		this.addCommand({
+			id: 'open-chat-modal',
+			name: 'Open Chat Modal',
+			callback: () => {
+				new ChatModal(this.app, this.searchEngine).open();
+			}
+		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));

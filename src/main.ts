@@ -7,6 +7,7 @@ import { ChatModal } from 'modals/chatmodal';
 import { SettingsTab } from 'views/settingsTab';
 import { ChatPanelView } from 'views/chatPanelView';
 import { CommentHighlighter, FeedbackData } from './commentHighlighter';
+import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -117,7 +118,7 @@ export default class MyPlugin extends Plugin {
 					  },
 					  {
 						"text": "Use basic RAG techniques to allow for talking with ai assistant for enhanced search on docs",
-						"comment": "Excellent mention of RAG techniques here! It’s great that you’ve incorporated advanced search methodologies."
+						"comment": "Excellent mention of RAG techniques here! It's great that you've incorporated advanced search methodologies."
 					  },
 					  {
 						"text": "Monetized website which generates api key\nUser enters api key into plugin config. Plugin sends api key to backend for all requests",
@@ -144,24 +145,40 @@ export default class MyPlugin extends Plugin {
 				this.commentHighlighter.displayCommentsInActiveFile(feedbackData);
 			}
 		})
+
+		this.addCommand({
+			id: 'embed-current-document',
+			name: 'Embed Current Document',
+			callback: () => {
+				this.embedActiveDocument();
+			}
+		});
+	}
+
+	async embedDocument(file: TFile) {
+		const creationDate = file.stat.ctime;
+		const formattedCreationDate = new Date(creationDate).toISOString();
+		const content = await FileContentExtractor.extractContentFromDocument(this.app, file);
+		
+		const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+		let voyagerId = frontmatter?.['voyager-id'];
+		
+		if (!voyagerId) {
+			voyagerId = uuidv4();
+			await this.app.fileManager.processFrontMatter(file, (fm) => {
+				fm['voyager-id'] = voyagerId;
+			});
+		}
+		
+		await this.searchEngine.embedDocument(file.name, content, voyagerId, formattedCreationDate);
 	}
 
 	async embedActiveDocument() {
 		const activeFile = this.app.workspace.getActiveFile();
+		
 		console.log("Embedding active document", activeFile);
 		if (activeFile) {
-			const content = await this.app.vault.read(activeFile);
-			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
-			let voyagerId = frontmatter?.['voyager-id'];
-			
-			if (!voyagerId) {
-				voyagerId = uuidv4();
-				await this.app.fileManager.processFrontMatter(activeFile, (fm) => {
-					fm['voyager-id'] = voyagerId;
-				});
-			}
-			
-			await this.searchEngine.embedDocument(activeFile.name, content, voyagerId);
+			await this.embedDocument(activeFile);
 		}
 	}
 
@@ -169,22 +186,10 @@ export default class MyPlugin extends Plugin {
 		const allFiles = this.app.vault.getAllLoadedFiles();
 		let i = 0;
 		for (const file of allFiles) {
-			if (file instanceof TFile && !['canvas', 'html', 'png', 'jpg', 'jpeg', '.pdf'].includes(file.extension)) {
-				const content = await this.app.vault.read(file);
-				const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-				let voyagerId = frontmatter?.['voyager-id'];
-				
-				if (!voyagerId) {
-					voyagerId = uuidv4();
-					await this.app.fileManager.processFrontMatter(file, (fm) => {
-						fm['voyager-id'] = voyagerId;
-					});
-				}
-
-				console.log("Content: ", content)
-				await this.searchEngine.embedDocument(file.name, content, voyagerId);
+			if (file instanceof TFile && !['canvas', 'html', 'png', 'jpg', 'jpeg'].includes(file.extension)) {
+				new Notice(`Embedding document ${i}/${allFiles.length}`);
 				i++;
-				console.log(`Embedded ${i}/${allFiles.length} documents`);
+				await this.embedDocument(file);
 			}
 		}
 	}

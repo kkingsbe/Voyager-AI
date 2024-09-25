@@ -1,5 +1,6 @@
 /*
 
+
 This CSS file will be included with your plugin, and
 available in the app when your plugin is enabled.
 
@@ -48,6 +49,8 @@ If your plugin does not need CSS, delete this file.
 
 .chat-message {
     cursor: default;
+    position: relative;
+    padding-right: 70px;
 }
 
 .chat-message:hover {
@@ -161,4 +164,57 @@ If your plugin does not need CSS, delete this file.
     height: 10px;
     background-color: var(--text-accent);
     transition: width 0.3s ease;
+}
+
+.chat-copy-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 5px 10px;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.chat-copy-button:hover {
+    opacity: 1;
+}
+
+.highlight-comment {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+
+.comment-icon {
+    position: absolute;
+    right: -20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.comment-widget {
+    position: absolute;
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+}
+
+.comment-icon {
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.comment-icon:hover {
+    opacity: 1;
+}
+
+.comment-dismiss-button:hover {
+    color: #333;
 }

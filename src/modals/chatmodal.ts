@@ -1,4 +1,4 @@
-import { App, Modal, MarkdownRenderer, Component } from "obsidian";
+import { App, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
 
 export class ChatModal extends Modal {
@@ -65,13 +65,26 @@ export class ChatModal extends Modal {
 		const messageEl = this.chatContainer.createEl('div', { cls: 'chat-message search-result-card' });
 		const senderEl = messageEl.createEl('strong', { text: sender + ': ', cls: 'search-result-title' });
 		
+		const contentEl = messageEl.createEl('div', { cls: 'search-result-secondary-text' });
+		
 		if (sender === 'Voyager') {
-			const contentEl = messageEl.createEl('div', { cls: 'search-result-secondary-text' });
 			MarkdownRenderer.renderMarkdown(message, contentEl, '', this as unknown as Component);
 		} else {
-			const contentEl = messageEl.createEl('span', { text: message, cls: 'search-result-secondary-text' });
+			contentEl.textContent = message;
 		}
 
+		const copyButton = messageEl.createEl('button', { text: 'Copy', cls: 'chat-copy-button' });
+		copyButton.addEventListener('click', () => this.copyToClipboard(message));
+
 		this.chatContainer.scrollTo(0, this.chatContainer.scrollHeight);
+	}
+
+	private copyToClipboard(text: string) {
+		navigator.clipboard.writeText(text).then(() => {
+			new Notice('Message copied to clipboard');
+		}, (err) => {
+			console.error('Could not copy text: ', err);
+			new Notice('Failed to copy message');
+		});
 	}
 }

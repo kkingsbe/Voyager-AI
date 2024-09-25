@@ -6,6 +6,7 @@ import { ContextualSearchModal } from 'modals/contextualsearchmodal';
 import { ChatModal } from 'modals/chatmodal';
 import { SettingsTab } from 'views/settingsTab';
 import { ChatPanelView } from 'views/chatPanelView';
+import { CommentHighlighter, FeedbackData } from './commentHighlighter';
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	searchEngine: SearchEngine;
+	commentHighlighter: CommentHighlighter;
 
 	async onload() {
 		await this.loadSettings();
@@ -85,6 +87,47 @@ export default class MyPlugin extends Plugin {
 			name: 'Embed All',
 			callback: () => {
 				this.embedAllDocuments();
+			}
+		})
+
+		this.commentHighlighter = new CommentHighlighter(this.app);
+		this.addCommand({
+			id: 'highlight-comments',
+			name: 'Highlight Comments',
+			callback: () => {
+				const feedbackData: FeedbackData = {
+					"feedback": [
+					  {
+						"text": "Voyager is an Obsidian plugin which allows for fast vector-based document similarity search, and intelligent LLM conversations within the context of your complete vault.",
+						"comment": "You've provided a clear and concise description of what Voyager is. Great job!"
+					  },
+					  {
+						"text": "Use basic RAG techniques to allow for talking with ai assistant for enhanced search on docs",
+						"comment": "Excellent mention of RAG techniques here! It’s great that you’ve incorporated advanced search methodologies."
+					  },
+					  {
+						"text": "Monetized website which generates api key\nUser enters api key into plugin config. Plugin sends api key to backend for all requests",
+						"comment": "This is a clear explanation of the monetization and API key process. Well done!"
+					  },
+					  {
+						"text": "Future Features\nReal-Time suggestions and explanations\nWhile typing, the assistant can check to see if it can add additional explanation or clarification to what you have written.",
+						"comment": "The idea of real-time suggestions and explanations is innovative and could greatly enhance the user's experience. Excellent forward-thinking!"
+					  },
+					  {
+						"text": "Formula checking\nDetermine if a formula was typed in a correct / valid manner. If not, create a comment.",
+						"comment": "This feature is very useful for ensuring accuracy in note-taking, especially in technical fields. Great addition!"
+					  },
+					  {
+						"text": "Conceptual error checking\nDetermine if a typed conceptual explanation is flawed or incorrect. If so, create a comment.",
+						"comment": "Identifying and correcting conceptual errors can help users understand complex topics better. Excellent feature!"
+					  },
+					  {
+						"text": "This feature has two modes\nHot mode: In this mode, the assistant consistently checks (every few secs) to see if a new comment should be added\nManual mode: In this mode, the assistant only runs when a certain hotkey is pressed.",
+						"comment": "The flexible modes for real-time suggestions are a thoughtful touch. Giving users control over how often checks occur can cater to different working styles. Great thinking!"
+					  }
+					]
+				};
+				this.commentHighlighter.displayCommentsInActiveFile(feedbackData);
 			}
 		})
 	}

@@ -20,15 +20,29 @@ export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	searchEngine: SearchEngine;
 	commentHighlighter: CommentHighlighter;
+	notificationBell: HTMLElement;
+	notificationCount: number = 5;
+
+	private addNotificationBell() {
+		this.notificationBell = this.addStatusBarItem();
+		this.notificationBell.addClass('mod-clickable');
+		this.notificationBell.addClass('notification-bell-container');
+		this.notificationBell.innerHTML = `
+			<span class="notification-bell">🔔</span>
+			<span class="notification-count">${this.notificationCount}</span>
+		`;
+		this.notificationBell.setAttribute('aria-label', 'Notifications');
+		this.notificationBell.addEventListener('click', () => {
+			new Notice('Notifications clicked!');
+			// TODO: Implement notification functionality
+		});
+	}
 
 	async onload() {
 		await this.loadSettings();
 		
 		new Notice("notetaking-sidekick loaded");
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		this.addNotificationBell();
 
 		this.registerView("chat-panel", (leaf) => new ChatPanelView(leaf))
 
@@ -191,5 +205,14 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.searchEngine.updateApiKey(this.settings.apiKey);
+	}
+
+	updateNotificationCount(count: number) {
+		this.notificationCount = count;
+		const countElement = this.notificationBell.querySelector('.notification-count');
+		if (countElement) {
+			countElement.textContent = count.toString();
+			(countElement as HTMLElement).style.display = count > 0 ? 'inline' : 'none';
+		}
 	}
 }

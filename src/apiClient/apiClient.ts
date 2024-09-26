@@ -73,4 +73,25 @@ export class ApiClient {
 
         return res.data;
     }
+
+    async getIndexedDocuments() {
+        const res = await axios.get(this.baseUrl + "/user/documents", {
+            params: {
+                api_key: this.apiKey
+            }
+        });
+
+        return res.data;
+    }
+
+    async deleteDocument(documentId: string) {
+        const res = await axios.delete(this.baseUrl + "/user/document", {
+            params: {
+                api_key: this.apiKey,
+                document_id: documentId
+            }
+        });
+
+        return res.data;
+    }
 }

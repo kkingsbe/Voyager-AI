@@ -8,6 +8,7 @@ import { SettingsTab } from 'views/settingsTab';
 import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
 import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { Decoration, EditorView } from '@codemirror/view';
+import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -154,6 +155,14 @@ export default class MyPlugin extends Plugin {
 			]);
 		}));
 
+		this.addCommand({
+			id: 'indexed-documents',
+			name: 'Manage Indexed Documents',
+			callback: () => {
+				new IndexedDocumentsModal(this.app, this.searchEngine.apiClient).open();
+			}
+		})
+
 		this.loadStyles();
 	}
 
@@ -227,7 +236,12 @@ export default class MyPlugin extends Plugin {
 			if (file instanceof TFile && !['canvas', 'html', 'png', 'jpg', 'jpeg'].includes(file.extension)) {
 				new Notice(`Embedding document ${i}/${allFiles.length}`);
 				i++;
-				await this.embedDocument(file);
+
+				try {
+					await this.embedDocument(file);
+				} catch (error) {
+					new Notice("Failed to embed document: " + file.name);
+				}
 			}
 		}
 	}

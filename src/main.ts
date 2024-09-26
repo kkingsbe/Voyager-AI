@@ -44,7 +44,7 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 		
 		new Notice("Voyager loaded");
-		this.addNotificationBell();
+		//this.addNotificationBell();
 
 		const { plugin: highlightPluginExtension, updateComments } = initializeHighlightPlugin([]);
 		this.registerEditorExtension([highlightPluginExtension]);
@@ -147,13 +147,13 @@ export default class MyPlugin extends Plugin {
 		// 	}
 		// })
 
-		this.registerEditorExtension(EditorView.decorations.of((view) => {
-			return Decoration.set([
-				Decoration.mark({
-					class: "voyager-test-highlight"
-				}).range(0, 10)
-			]);
-		}));
+		// this.registerEditorExtension(EditorView.decorations.of((view) => {
+		// 	return Decoration.set([
+		// 		Decoration.mark({
+		// 			class: "voyager-test-highlight"
+		// 		}).range(0, 10)
+		// 	]);
+		// }));
 
 		this.addCommand({
 			id: 'indexed-documents',

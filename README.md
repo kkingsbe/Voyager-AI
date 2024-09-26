@@ -37,7 +37,7 @@ This project is licensed under the MIT License.
 
 ## Contact
 For any inquiries or support-related questions, contact:
-- **Email**: [your-email@example.com]
-- **Discord**: Join us on Discord!
+- **Email**: kkingsbe@gmail.com
+- **Discord**: [Join us on Discord!](https://discord.gg/7QAmGDrH)
 
 Thank you for choosing Voyager! We look forward to seeing how you use it to enhance your productivity and creativity.

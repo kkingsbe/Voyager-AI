@@ -51,7 +51,10 @@ export class ChatModal extends Modal {
 				this.addMessageToChat('You', message);
 				this.inputField.value = '';
 				try {
-					const response = await this.apiClient.chat(message);
+					const activeFile = this.app.workspace.getActiveFile();
+					const frontmatter = activeFile ? this.app.metadataCache.getFileCache(activeFile)?.frontmatter : null;
+					const currentDocumentId = frontmatter?.["voyager-id"] ?? undefined;
+					const response = await this.apiClient.chat(message, currentDocumentId);
 					this.addMessageToChat('Voyager', response);
 				} catch (error) {
 					console.error('Error in chat:', error);

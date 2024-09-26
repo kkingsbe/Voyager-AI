@@ -3,6 +3,9 @@
 ## Overview
 Voyager is an innovative plugin designed to enhance your note-taking experience in Obsidian. Leveraging advanced vector-based document similarity search and intelligent language model conversations, Voyager transforms how you interact with your notes, making knowledge navigation seamless and intuitive.
 
+## Website
+You can view [our website](https://voyager-ai-obsidian.vercel.app) to see a comprehensive list of current and upcoming features, as well as additional demos and examples.
+
 ## Features
 - **Vector-Based Document Similarity Search**: Quickly find relevant notes based on the context of your current document.
 - **Intelligent Conversations**: Engage with an AI assistant that provides contextual responses derived from your vault.

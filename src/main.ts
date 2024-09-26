@@ -1,12 +1,13 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { MarkdownPostProcessorContext, Notice, Plugin, TFile } from 'obsidian';
 import { SearchEngine } from 'searchengine';
 import { v4 as uuidv4 } from 'uuid';
 import { debounce } from 'lodash';
 import { ContextualSearchModal } from 'modals/contextualsearchmodal';
 import { ChatModal } from 'modals/chatmodal';
 import { SettingsTab } from 'views/settingsTab';
-import { ChatPanelView } from 'views/chatPanelView';
-import { CommentHighlighter, FeedbackData } from './commentHighlighter';
+import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
+import { IComment, initializeHighlightPlugin } from './commentHighlighter';
+import { Decoration, EditorView } from '@codemirror/view';
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -19,21 +20,40 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	searchEngine: SearchEngine;
-	commentHighlighter: CommentHighlighter;
+	notificationBell: HTMLElement;
+	notificationCount: number = 5;
+	updateComments: ((comments: IComment[]) => void) | undefined;
+
+	private addNotificationBell() {
+		this.notificationBell = this.addStatusBarItem();
+		this.notificationBell.addClass('mod-clickable');
+		this.notificationBell.addClass('notification-bell-container');
+		this.notificationBell.innerHTML = `
+			<span class="notification-bell">🔔</span>
+			<span class="notification-count">${this.notificationCount}</span>
+		`;
+		this.notificationBell.setAttribute('aria-label', 'Notifications');
+		this.notificationBell.addEventListener('click', () => {
+			new Notice('Notifications clicked!');
+			// TODO: Implement notification functionality
+		});
+	}
 
 	async onload() {
 		await this.loadSettings();
 		
-		new Notice("notetaking-sidekick loaded");
+		new Notice("Voyager loaded");
+		this.addNotificationBell();
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		const { plugin: highlightPluginExtension, updateComments } = initializeHighlightPlugin([]);
+		this.registerEditorExtension([highlightPluginExtension]);
+		console.log("HighlightPlugin registered:", highlightPluginExtension);
+		this.updateComments = updateComments;
 
-		this.registerView("chat-panel", (leaf) => new ChatPanelView(leaf))
-
-		this.app.workspace.onLayoutReady(() => {
-			this.addChatPanel()
+		// Hook into preview mode to apply highlights
+		this.registerMarkdownPostProcessor((element: HTMLElement, context: MarkdownPostProcessorContext) => {
+			// console.log("Markdown post processor called");
+			// this.highlightInPreview(element);
 		});
 
 		this.addCommand({
@@ -90,64 +110,113 @@ export default class MyPlugin extends Plugin {
 			}
 		})
 
-		this.commentHighlighter = new CommentHighlighter(this.app);
 		this.addCommand({
-			id: 'highlight-comments',
-			name: 'Highlight Comments',
+			id: 'embed-current-document',
+			name: 'Embed Current Document',
 			callback: () => {
-				const feedbackData: FeedbackData = {
-					"feedback": [
-					  {
-						"text": "Voyager is an Obsidian plugin which allows for fast vector-based document similarity search, and intelligent LLM conversations within the context of your complete vault.",
-						"comment": "You've provided a clear and concise description of what Voyager is. Great job!"
-					  },
-					  {
-						"text": "Use basic RAG techniques to allow for talking with ai assistant for enhanced search on docs",
-						"comment": "Excellent mention of RAG techniques here! It’s great that you’ve incorporated advanced search methodologies."
-					  },
-					  {
-						"text": "Monetized website which generates api key\nUser enters api key into plugin config. Plugin sends api key to backend for all requests",
-						"comment": "This is a clear explanation of the monetization and API key process. Well done!"
-					  },
-					  {
-						"text": "Future Features\nReal-Time suggestions and explanations\nWhile typing, the assistant can check to see if it can add additional explanation or clarification to what you have written.",
-						"comment": "The idea of real-time suggestions and explanations is innovative and could greatly enhance the user's experience. Excellent forward-thinking!"
-					  },
-					  {
-						"text": "Formula checking\nDetermine if a formula was typed in a correct / valid manner. If not, create a comment.",
-						"comment": "This feature is very useful for ensuring accuracy in note-taking, especially in technical fields. Great addition!"
-					  },
-					  {
-						"text": "Conceptual error checking\nDetermine if a typed conceptual explanation is flawed or incorrect. If so, create a comment.",
-						"comment": "Identifying and correcting conceptual errors can help users understand complex topics better. Excellent feature!"
-					  },
-					  {
-						"text": "This feature has two modes\nHot mode: In this mode, the assistant consistently checks (every few secs) to see if a new comment should be added\nManual mode: In this mode, the assistant only runs when a certain hotkey is pressed.",
-						"comment": "The flexible modes for real-time suggestions are a thoughtful touch. Giving users control over how often checks occur can cater to different working styles. Great thinking!"
-					  }
-					]
-				};
-				this.commentHighlighter.displayCommentsInActiveFile(feedbackData);
+				this.embedActiveDocument();
 			}
-		})
+		});
+
+		// this.addCommand({
+		// 	id: 'test-comments',
+		// 	name: 'Test Comments',
+		// 	editorCallback: (editor) => {
+		// 		console.log("Test Comments command triggered");
+		// 		if (this.updateComments) {
+		// 			const testComments = [
+		// 				{
+		// 					source_text: "the",  // This should exist in almost any document
+		// 					comment_text: "This is a test comment"
+		// 				}
+		// 			];
+		// 			console.log("Calling updateComments with:", testComments);
+		// 			this.updateComments(testComments);
+					
+		// 			// Force a refresh of the editor
+		// 			setTimeout(() => {
+		// 				editor.refresh();
+		// 			}, 100);
+
+		// 			new Notice("Test comment added");
+		// 		} else {
+		// 			console.error("Update comments function not available");
+		// 			new Notice("Update comments function not available");
+		// 		}
+		// 	}
+		// })
+
+		this.registerEditorExtension(EditorView.decorations.of((view) => {
+			return Decoration.set([
+				Decoration.mark({
+					class: "voyager-test-highlight"
+				}).range(0, 10)
+			]);
+		}));
+
+		this.loadStyles();
+	}
+
+	highlightInPreview(element: HTMLElement) {
+		console.log("highlightInPreview called");
+		const keyword = "highlight";
+
+		const wrapKeyword = (text: string): DocumentFragment => {
+			const fragment = document.createDocumentFragment();
+			const regex = new RegExp(`(${keyword})`, 'gi');
+			const parts = text.split(regex);
+
+			parts.forEach((part) => {
+				if (part.toLowerCase() === keyword.toLowerCase()) {
+					console.log("Highlighting:", part);
+					const highlightSpan = document.createElement('span');
+					highlightSpan.className = 'voyager-highlight-keyword';
+					highlightSpan.textContent = part;
+					fragment.appendChild(highlightSpan);
+				} else {
+					fragment.appendChild(document.createTextNode(part));
+				}
+			});
+
+			return fragment;
+		};
+
+		const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+		let node: Node | null;
+		while ((node = walker.nextNode())) {
+			const text = node.nodeValue;
+			if (text && text.toLowerCase().includes(keyword.toLowerCase())) {
+				console.log("Found text to highlight:", text);
+				const fragment = wrapKeyword(text);
+				node.parentNode?.replaceChild(fragment, node);
+			}
+		}
+	}
+
+	async embedDocument(file: TFile) {
+		const creationDate = file.stat.ctime;
+		const formattedCreationDate = new Date(creationDate).toISOString();
+		const content = await FileContentExtractor.extractContentFromDocument(this.app, file);
+		
+		const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+		let voyagerId = frontmatter?.['voyager-id'];
+		
+		if (!voyagerId) {
+			voyagerId = uuidv4();
+			await this.app.fileManager.processFrontMatter(file, (fm) => {
+				fm['voyager-id'] = voyagerId;
+			});
+		}
+		
+		await this.searchEngine.embedDocument(file.name, content, voyagerId, formattedCreationDate);
 	}
 
 	async embedActiveDocument() {
 		const activeFile = this.app.workspace.getActiveFile();
+		
 		console.log("Embedding active document", activeFile);
 		if (activeFile) {
-			const content = await this.app.vault.read(activeFile);
-			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
-			let voyagerId = frontmatter?.['voyager-id'];
-			
-			if (!voyagerId) {
-				voyagerId = uuidv4();
-				await this.app.fileManager.processFrontMatter(activeFile, (fm) => {
-					fm['voyager-id'] = voyagerId;
-				});
-			}
-			
-			await this.searchEngine.embedDocument(activeFile.name, content, voyagerId);
+			await this.embedDocument(activeFile);
 		}
 	}
 
@@ -155,22 +224,10 @@ export default class MyPlugin extends Plugin {
 		const allFiles = this.app.vault.getAllLoadedFiles();
 		let i = 0;
 		for (const file of allFiles) {
-			if (file instanceof TFile && !['canvas', 'html', 'png', 'jpg', 'jpeg', '.pdf'].includes(file.extension)) {
-				const content = await this.app.vault.read(file);
-				const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-				let voyagerId = frontmatter?.['voyager-id'];
-				
-				if (!voyagerId) {
-					voyagerId = uuidv4();
-					await this.app.fileManager.processFrontMatter(file, (fm) => {
-						fm['voyager-id'] = voyagerId;
-					});
-				}
-
-				console.log("Content: ", content)
-				await this.searchEngine.embedDocument(file.name, content, voyagerId);
+			if (file instanceof TFile && !['canvas', 'html', 'png', 'jpg', 'jpeg'].includes(file.extension)) {
+				new Notice(`Embedding document ${i}/${allFiles.length}`);
 				i++;
-				console.log(`Embedded ${i}/${allFiles.length} documents`);
+				await this.embedDocument(file);
 			}
 		}
 	}
@@ -191,5 +248,30 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.searchEngine.updateApiKey(this.settings.apiKey);
+	}
+
+	updateNotificationCount(count: number) {
+		this.notificationCount = count;
+		const countElement = this.notificationBell.querySelector('.notification-count');
+		if (countElement) {
+			countElement.textContent = count.toString();
+			(countElement as HTMLElement).style.display = count > 0 ? 'inline' : 'none';
+		}
+	}
+
+	loadStyles() {
+		const styleEl = document.createElement('style');
+		styleEl.id = 'voyager-plugin-styles';
+		styleEl.textContent = `
+			.voyager-highlight-keyword {
+				background-color: yellow !important;
+				color: black !important;
+				padding: 2px !important;
+				border-radius: 3px !important;
+				display: inline !important;
+			}
+		`;
+		document.head.appendChild(styleEl);
+		console.log("Styles loaded");
 	}
 }

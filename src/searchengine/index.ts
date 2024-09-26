@@ -14,8 +14,8 @@ export class SearchEngine {
         this.apiClient = new ApiClient(apiKey);
     }
 
-    async embedDocument(title: string, content: string, id: string) {
-        return this.apiClient.embedDocument(title, content, id);
+    async embedDocument(title: string, content: string, id: string, creationDate: string) {
+        return this.apiClient.embedDocument(title, content, id, creationDate);
     }
 
     async search(query: string, limit: number, enhanced: boolean) {

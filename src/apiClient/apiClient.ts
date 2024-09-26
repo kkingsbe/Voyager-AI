@@ -8,19 +8,20 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'https://voyager-backend.onrender.com' //'http://localhost:3000';
+    private baseUrl: string = 'https://voyager-backend.onrender.com'; //'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;
     }
 
-    async embedDocument(title: string, content: string, id: string) {
+    async embedDocument(title: string, content: string, id: string, creationDate: string) {
         console.log("Embedding document", title, content, id);
         const res = await axios.post(this.baseUrl + "/user/index-document",
             {
                 title,
                 content,
                 id,
+                creationDate,
                 apiKey: this.apiKey
             }
         )

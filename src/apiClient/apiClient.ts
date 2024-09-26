@@ -8,7 +8,7 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'http://localhost:3000';//'https://voyager-backend.onrender.com';
+    private baseUrl: string = 'https://voyager-backend.onrender.com'; //'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;

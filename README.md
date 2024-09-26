@@ -30,7 +30,6 @@ Join the **Official Voyager AI Discord Server** for:
 
 ## Future Features
 We're constantly working on improvements! Here are some exciting features to look forward to:
-- Dialog for managing indexed documents.
 - Suggestions for document placements and link additions.
 - Real-time suggestions and error checking.
 - Enhanced note export capabilities and image generation options.

@@ -1,96 +1,43 @@
-# Obsidian Sample Plugin
+# Voyager AI Plugin for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+## Overview
+Voyager is an innovative plugin designed to enhance your note-taking experience in Obsidian. Leveraging advanced vector-based document similarity search and intelligent language model conversations, Voyager transforms how you interact with your notes, making knowledge navigation seamless and intuitive.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
+- **Vector-Based Document Similarity Search**: Quickly find relevant notes based on the context of your current document.
+- **Intelligent Conversations**: Engage with an AI assistant that provides contextual responses derived from your vault.
+- **User-Friendly Installation**: Minimal setup required; simply drag and drop the plugin into your `.obsidian/plugins` directory.
+- **Early Access to New Features**: Be the first to try out exciting new additions as they are developed.
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+## Getting Started
+1. **Installation**:
+   - Download and install the Voyager plugin by dragging it into your Obsidian's `.obsidian/plugins` directory.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+2. **API Key Configuration**:
+   - You will need an API key for the plugin to function. To obtain an API key, please send us a message on Discord or reach out directly.
 
-## First time developing plugins?
+3. **Using Voyager**:
+   - Once installed and configured, you can start using the features immediately! Ask questions to the AI assistant or explore document suggestions based on your active notes.
 
-Quick starting guide for new plugin devs:
+## Community Support
+Join the **Official Voyager AI Discord Server** for:
+- **Troubleshooting & Onboarding Assistance**: Get help from both the community and the development team.
+- **Feature Requests**: Share your ideas for improvements and new features.
+- **Bug Reports**: Assist us in making Voyager better by reporting any issues you encounter.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Future Features
+We're constantly working on improvements! Here are some exciting features to look forward to:
+- Dialog for managing indexed documents.
+- Suggestions for document placements and link additions.
+- Real-time suggestions and error checking.
+- Enhanced note export capabilities and image generation options.
 
-## Releasing new releases
+## License
+This project is licensed under the MIT License. 
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## Contact
+For any inquiries or support-related questions, contact:
+- **Email**: [your-email@example.com]
+- **Discord**: Join us on Discord!
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
-
-## Adding your plugin to the community plugin list
-
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+Thank you for choosing Voyager! We look forward to seeing how you use it to enhance your productivity and creativity.

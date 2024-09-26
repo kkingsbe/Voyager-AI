@@ -42,7 +42,7 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		
-		new Notice("notetaking-sidekick loaded");
+		new Notice("Voyager loaded");
 		this.addNotificationBell();
 
 		const { plugin: highlightPluginExtension, updateComments } = initializeHighlightPlugin([]);
@@ -118,33 +118,33 @@ export default class MyPlugin extends Plugin {
 			}
 		});
 
-		this.addCommand({
-			id: 'test-comments',
-			name: 'Test Comments',
-			editorCallback: (editor) => {
-				console.log("Test Comments command triggered");
-				if (this.updateComments) {
-					const testComments = [
-						{
-							source_text: "the",  // This should exist in almost any document
-							comment_text: "This is a test comment"
-						}
-					];
-					console.log("Calling updateComments with:", testComments);
-					this.updateComments(testComments);
+		// this.addCommand({
+		// 	id: 'test-comments',
+		// 	name: 'Test Comments',
+		// 	editorCallback: (editor) => {
+		// 		console.log("Test Comments command triggered");
+		// 		if (this.updateComments) {
+		// 			const testComments = [
+		// 				{
+		// 					source_text: "the",  // This should exist in almost any document
+		// 					comment_text: "This is a test comment"
+		// 				}
+		// 			];
+		// 			console.log("Calling updateComments with:", testComments);
+		// 			this.updateComments(testComments);
 					
-					// Force a refresh of the editor
-					setTimeout(() => {
-						editor.refresh();
-					}, 100);
+		// 			// Force a refresh of the editor
+		// 			setTimeout(() => {
+		// 				editor.refresh();
+		// 			}, 100);
 
-					new Notice("Test comment added");
-				} else {
-					console.error("Update comments function not available");
-					new Notice("Update comments function not available");
-				}
-			}
-		})
+		// 			new Notice("Test comment added");
+		// 		} else {
+		// 			console.error("Update comments function not available");
+		// 			new Notice("Update comments function not available");
+		// 		}
+		// 	}
+		// })
 
 		this.registerEditorExtension(EditorView.decorations.of((view) => {
 			return Decoration.set([

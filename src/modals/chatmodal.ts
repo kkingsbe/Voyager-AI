@@ -90,4 +90,19 @@ export class ChatModal extends Modal {
 			new Notice('Failed to copy message');
 		});
 	}
+
+	public async sendAutomaticMessage(message: string) {
+		this.addMessageToChat('You', message);
+		this.inputField.value = '';
+		try {
+			const activeFile = this.app.workspace.getActiveFile();
+			const frontmatter = activeFile ? this.app.metadataCache.getFileCache(activeFile)?.frontmatter : null;
+			const currentDocumentId = frontmatter?.["voyager-id"] ?? undefined;
+			const response = await this.apiClient.chat(message, currentDocumentId);
+			this.addMessageToChat('Voyager', response);
+		} catch (error) {
+			console.error('Error in chat:', error);
+			this.addMessageToChat('Error', 'An error occurred while processing your request.');
+		}
+	}
 }

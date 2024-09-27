@@ -26,6 +26,7 @@ export default class MyPlugin extends Plugin {
 	notificationCount: number = 5;
 	updateComments: ((comments: IComment[]) => void) | undefined;
 	private autoEmbedListener: EventRef | null = null;
+	private summaryButton: HTMLElement;
 
 	private addNotificationBell() {
 		this.notificationBell = this.addStatusBarItem();
@@ -84,6 +85,8 @@ export default class MyPlugin extends Plugin {
 				}
 			}
 		}, 5000));
+
+		this.addSummaryButton();
 
 		this.addCommand({
 			id: 'contextual-search',
@@ -280,5 +283,27 @@ export default class MyPlugin extends Plugin {
 		`;
 		document.head.appendChild(styleEl);
 		console.log("Styles loaded");
+	}
+
+	private addSummaryButton() {
+		this.summaryButton = this.addStatusBarItem();
+		this.summaryButton.addClass('mod-clickable');
+		this.summaryButton.innerHTML = '📝';
+		this.summaryButton.setAttribute('aria-label', 'Summarize Document');
+		this.summaryButton.addEventListener('click', () => {
+			this.summarizeActiveDocument();
+		});
+	}
+
+	private async summarizeActiveDocument() {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (activeFile) {
+			new Notice('Summarizing document: ' + activeFile.name);
+			const chatModal = new ChatModal(this.app, this.searchEngine.apiClient);
+			chatModal.open();
+			chatModal.sendAutomaticMessage("Summarize the current document");
+		} else {
+			new Notice('No active document to summarize');
+		}
 	}
 }

@@ -402,3 +402,89 @@ If your plugin does not need CSS, delete this file.
     font-size: 0.8em;
     margin-top: 5px;
 }
+
+.document-graph-modal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.document-graph-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.document-graph-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.document-graph-container {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.document-graph-footer {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.document-graph-close-button {
+    padding: 8px 16px;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.highlighted-node-info {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+}
+
+.document-graph-container svg {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+}
+
+.document-graph-container svg text {
+    font-size: 10px;
+    fill: var(--text-normal);
+}
+
+.document-graph-container svg circle:hover {
+    cursor: pointer;
+}
+
+.document-graph-node {
+    transition: r 0.2s ease;
+    cursor: pointer;
+}
+
+.document-graph-node:hover {
+    r: 8px;
+}
+
+.document-graph-label {
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    opacity: 0.7;
+}
+
+.document-graph-node:hover + .document-graph-label {
+    opacity: 1;
+}
+
+.document-graph-tooltip {
+    position: absolute;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 12px;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}

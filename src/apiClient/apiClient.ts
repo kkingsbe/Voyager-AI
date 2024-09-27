@@ -1,4 +1,5 @@
 import axios from "axios";
+import { DocumentGraphResponse } from '../modals/documentGraphModal/types';
 
 export interface SearchResult {
     score: number;
@@ -8,7 +9,8 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'https://voyager-backend.onrender.com'; //'http://localhost:3000';
+    // private baseUrl: string = 'https://voyager-backend.onrender.com';
+    private baseUrl: string = 'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;
@@ -86,6 +88,17 @@ export class ApiClient {
 
     async deleteDocument(documentId: string) {
         const res = await axios.delete(this.baseUrl + "/user/document", {
+            params: {
+                api_key: this.apiKey,
+                document_id: documentId
+            }
+        });
+
+        return res.data;
+    }
+
+    async getDocumentGraph(documentId: string): Promise<DocumentGraphResponse> {
+        const res = await axios.get<DocumentGraphResponse>(this.baseUrl + "/user/document-graph", {
             params: {
                 api_key: this.apiKey,
                 document_id: documentId

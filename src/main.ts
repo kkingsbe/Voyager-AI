@@ -8,6 +8,7 @@ import { SettingsTab } from 'views/settingsTab';
 import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
 import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
+import { DocumentGraphModal } from 'modals/documentGraphModal';
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -155,6 +156,25 @@ export default class MyPlugin extends Plugin {
 				new IndexedDocumentsModal(this.app, this.searchEngine.apiClient).open();
 			}
 		})
+
+		this.addCommand({
+			id: 'open-document-graph',
+			name: 'Open Document Graph',
+			callback: () => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (activeFile) {
+					const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+					const voyagerId = frontmatter?.['voyager-id'];
+					if (voyagerId) {
+						new DocumentGraphModal(this.app, this.searchEngine.apiClient, voyagerId).open();
+					} else {
+						new Notice('Voyager ID not found in the frontmatter of the active document.');
+					}
+				} else {
+					new Notice('No active document to open the document graph.');
+				}
+			}
+		});
 
 		this.loadStyles();
 	}

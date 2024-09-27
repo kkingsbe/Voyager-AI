@@ -1,6 +1,6 @@
 import { App, Modal, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
-import { Document, ApiLink, Link, DocumentGraphResponse } from './types';
+import { Document, ApiLink, Link, DocumentGraphResponse, CustomNode } from './types';
 import { GraphRenderer } from './graphRenderer';
 
 export class DocumentGraphModal extends Modal {
@@ -22,9 +22,8 @@ export class DocumentGraphModal extends Modal {
         this.createHeader(contentEl);
         const graphContainer = this.createGraphContainer(contentEl);
 
-        this.graphRenderer = new GraphRenderer(graphContainer);
-
-        await this.fetchDataAndRenderGraph();
+        this.graphRenderer = new GraphRenderer(graphContainer, this.apiClient);
+        await this.fetchDataAndRenderGraph(this.documentId);
     }
 
     private createHeader(container: HTMLElement) {
@@ -38,9 +37,9 @@ export class DocumentGraphModal extends Modal {
         return graphContainer;
     }
 
-    private async fetchDataAndRenderGraph() {
+    private async fetchDataAndRenderGraph(documentId: string) {
         try {
-            const response: DocumentGraphResponse = await this.apiClient.getDocumentGraph(this.documentId);
+            const response: DocumentGraphResponse = await this.apiClient.getDocumentGraph(documentId);
             const nodes = response.documents;
             const links = this.transformLinks(response.documents, response.links);
             this.graphRenderer.renderGraph(nodes, links);
@@ -63,5 +62,9 @@ export class DocumentGraphModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
         this.graphRenderer.cleanup();
+    }
+
+    private async handleNodeClick(node: CustomNode) {
+        await this.fetchDataAndRenderGraph(node.id);
     }
 }

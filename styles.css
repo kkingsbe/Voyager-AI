@@ -488,3 +488,21 @@ If your plugin does not need CSS, delete this file.
     pointer-events: none;
     transition: opacity 0.2s ease;
 }
+
+.heatmap-cell {
+    stroke: #fff;
+    stroke-width: 1px;
+}
+
+.heatmap-cell:hover {
+    stroke: #000;
+    stroke-width: 2px;
+}
+
+.document-graph-tooltip {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 12px;
+}

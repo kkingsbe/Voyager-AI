@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, Notice, Plugin, TFile } from 'obsidian';
+import { EventRef, MarkdownPostProcessorContext, Notice, Plugin, TFile } from 'obsidian';
 import { SearchEngine } from 'searchengine';
 import { v4 as uuidv4 } from 'uuid';
 import { debounce } from 'lodash';
@@ -7,15 +7,16 @@ import { ChatModal } from 'modals/chatmodal';
 import { SettingsTab } from 'views/settingsTab';
 import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
 import { IComment, initializeHighlightPlugin } from './commentHighlighter';
-import { Decoration, EditorView } from '@codemirror/view';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
 
 interface MyPluginSettings {
 	apiKey: string;
+	autoEmbedOnEdit: boolean;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	apiKey: ''
+	apiKey: '',
+	autoEmbedOnEdit: true
 }
 
 export default class MyPlugin extends Plugin {
@@ -24,6 +25,7 @@ export default class MyPlugin extends Plugin {
 	notificationBell: HTMLElement;
 	notificationCount: number = 5;
 	updateComments: ((comments: IComment[]) => void) | undefined;
+	private autoEmbedListener: EventRef | null = null;
 
 	private addNotificationBell() {
 		this.notificationBell = this.addStatusBarItem();
@@ -68,32 +70,20 @@ export default class MyPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
 		this.searchEngine = new SearchEngine(this.app, this.settings.apiKey);
 
-		// Register event to embed document when saved
-		const debouncedEmbed = debounce(() => {
-			if (this.app.workspace.getActiveFile()) {
-				new Notice("Voyager: Embedding document " + this.app.workspace.getActiveFile()?.name);
-				this.embedActiveDocument();
-			}
-		}, 10000); // Adjust the debounce delay as needed
-
-		this.registerEvent(
-			this.app.vault.on('modify', (file: TFile) => {
-				if (file === this.app.workspace.getActiveFile()) {
-					debouncedEmbed();
+		// Add the auto-embed listener
+		this.autoEmbedListener = this.app.vault.on('modify', debounce(async (file: TFile) => {
+			if (file instanceof TFile) {
+				if(this.settings.autoEmbedOnEdit) {
+					new Notice(`Embedding document ${file.name}`);
+					await this.embedDocument(file);
 				}
-			})
-		);
+			}
+		}, 5000));
 
 		this.addCommand({
 			id: 'contextual-search',
@@ -252,6 +242,9 @@ export default class MyPlugin extends Plugin {
 	}
 
 	onunload() {
+		if (this.autoEmbedListener) {
+			this.app.vault.offref(this.autoEmbedListener);
+		}
 		this.app.workspace.detachLeavesOfType('chat-panel')
 	}
 

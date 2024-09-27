@@ -24,5 +24,15 @@ export class SettingsTab extends PluginSettingTab {
 					this.plugin.settings.apiKey = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setName('Auto Embed on Edit')
+			.setDesc('Automatically embed documents when they are edited')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.autoEmbedOnEdit)
+				.onChange(async (value) => {
+					this.plugin.settings.autoEmbedOnEdit = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 }

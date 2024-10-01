@@ -506,3 +506,8 @@ If your plugin does not need CSS, delete this file.
     padding: 5px;
     font-size: 12px;
 }
+
+.internal-link {
+    display: inline;
+    white-space: nowrap;
+}

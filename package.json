@@ -45,6 +45,7 @@
 		"openai": "^4.61.0",
 		"pdf2json-browser": "^4.0.12",
 		"pdfjs-dist": "^4.6.82",
+		"socket.io-client": "^4.8.0",
 		"ts-jest": "^29.2.5",
 		"zod": "^3.23.8"
 	}

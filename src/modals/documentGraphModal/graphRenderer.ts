@@ -28,6 +28,19 @@ export class GraphRenderer {
             .force("center", d3.forceCenter(500, 500));
     }
 
+    public addNodes(nodes: CustomNode[]) {
+        this.nodes = nodes;
+    }
+
+    public addLinks(links: Link[]) {
+        this.links = links;
+    }
+
+    public clear() {
+        this.nodes = [];
+        this.links = [];
+    }
+
     private createTooltip() {
         this.tooltip = d3.select(this.svg.node()!.parentNode as HTMLElement)
             .append("div")
@@ -82,6 +95,7 @@ export class GraphRenderer {
             this.simulation.stop();
         }
     }
+
     private transformLinks(documents: Document[], links: ApiLink[]): Link[] {
         const nodeMap = new Map(documents.map(doc => [doc.id!, doc]));
         return links.map(link => {
@@ -89,8 +103,26 @@ export class GraphRenderer {
             const target = nodeMap.get(link.target);
             if (source && target) {
                 return {
-                    source: { ...source, id: source.id } as CustomNode,
-                    target: { ...target, id: target.id } as CustomNode,
+                    source: {
+                        ...source,
+                        id: source.id,
+                        x: Math.random() * 1000,
+                        y: Math.random() * 1000,
+                        vx: 0,
+                        vy: 0,
+                        fx: null,
+                        fy: null
+                    } as CustomNode,
+                    target: {
+                        ...target,
+                        id: target.id,
+                        x: Math.random() * 1000,
+                        y: Math.random() * 1000,
+                        vx: 0,
+                        vy: 0,
+                        fx: null,
+                        fy: null
+                    } as CustomNode,
                     similarity: link.similarity
                 };
             }
@@ -103,105 +135,120 @@ export class GraphRenderer {
         const res = this.apiClient.getDocumentGraph(node.id!);
         res.then((response: DocumentGraphResponse) => {
             console.log("API response:", response);
-            const newNodes = response.documents.filter(newNode => !this.nodes.some(existingNode => existingNode.id === newNode.id));
-            const newLinks = this.transformLinks(response.documents, response.links);
             
-            console.log("New nodes:", newNodes);
-            console.log("New links:", newLinks);
-
-            // Add only new nodes and links
+            // Merge new nodes with existing nodes
+            const newNodes = response.documents
+                .filter(newNode => !this.nodes.some(existingNode => existingNode.id === newNode.id))
+                .map(newNode => ({
+                    ...newNode,
+                    x: (node.x ?? 0) + (Math.random() - 0.5) * 100,
+                    y: (node.y ?? 0) + (Math.random() - 0.5) * 100,
+                    vx: 0,
+                    vy: 0,
+                    fx: null,
+                    fy: null
+                } as CustomNode));
+            
             this.nodes = [...this.nodes, ...newNodes];
-            this.links = [...this.links, ...newLinks.filter(newLink => 
+
+            // Transform and merge new links
+            const newLinks = this.transformLinks(response.documents, response.links);
+            console.log("New links before filtering:", newLinks);
+            
+            const addedLinks = newLinks.filter(newLink => 
                 !this.links.some(existingLink => 
-                    existingLink.source.id === newLink.source.id && 
-                    existingLink.target.id === newLink.target.id
+                    (existingLink.source.id === newLink.source.id && existingLink.target.id === newLink.target.id) ||
+                    (existingLink.source.id === newLink.target.id && existingLink.target.id === newLink.source.id)
                 )
-            )];
+            );
+            console.log("Links to be added:", addedLinks);
+            
+            this.links = [...this.links, ...addedLinks];
 
             console.log("Updated nodes:", this.nodes);
             console.log("Updated links:", this.links);
 
             // Update the simulation with new data
             this.simulation.nodes(this.nodes);
-            this.simulation.force("link", d3.forceLink<CustomNode, Link>(this.links).id(d => d.id).distance(100));
+            this.simulation.force("link", d3.forceLink<CustomNode, Link>(this.links).id(d => d.id!).distance(100));
             this.simulation.alpha(1).restart();
 
             // Re-render the graph with all nodes and links
-            this.renderGraph(this.nodes, this.links);
+            this.renderGraph();
         }).catch(error => {
             console.error('Error fetching document graph data:', error);
             new Notice('Failed to load additional document graph data. Please try again.');
         });
     }
 
-    public renderGraph(nodes: CustomNode[], links: Link[]) {
-        console.log("Rendering graph with nodes:", nodes, "and links:", links);
+    public renderGraph() {
+        console.log("Rendering graph with nodes:", this.nodes, "and links:", this.links);
 
-        this.simulation.nodes(nodes);
-        this.simulation.force("link", d3.forceLink<CustomNode, Link>(links).id(d => d.id).distance(100));
+        // Ensure all nodes have valid numeric values for x and y
+        this.nodes.forEach(node => {
+            if (typeof node.x !== 'number' || isNaN(node.x)) node.x = Math.random() * 1000;
+            if (typeof node.y !== 'number' || isNaN(node.y)) node.y = Math.random() * 1000;
+        });
+
+        this.simulation.nodes(this.nodes);
+        this.simulation.force("link", d3.forceLink<CustomNode, Link>(this.links).id(d => d.id).distance(100));
         this.simulation.alpha(1).restart();
 
         // Update links
-        const link = this.g.selectAll("line")
-            .data(links, (d: Link) => `${d.source.id}-${d.target.id}`)
-            .join(
-                enter => {
-                    console.log("Entering new links:", enter);
-                    return enter.append("line")
-                        .attr("stroke-width", d => d.similarity * 2)
-                        .attr("stroke", "#999")
-                        .attr("stroke-opacity", 0.6);
-                },
-                update => {
-                    console.log("Updating existing links:", update);
-                    return update;
-                },
-                exit => {
-                    console.log("Removing old links:", exit);
-                    return exit.remove();
-                }
-            );
+        const link = this.g.selectAll<SVGLineElement, Link>("line")
+            .data(this.links, (d: Link) => `${d.source.id}-${d.target.id}`);
+
+        link.exit().remove();
+
+        const linkEnter = link.enter().append("line")
+            .attr("stroke-width", d => d.similarity * 2)
+            .attr("stroke", "#999")
+            .attr("stroke-opacity", 0.6);
+
+        const linkMerge = linkEnter.merge(link);
 
         // Update nodes
-        const node = this.g.selectAll("circle")
-            .data(nodes, (d: CustomNode) => d.id)
-            .join(
-                enter => enter.append("circle")
-                    .attr("r", 5)
-                    .attr("fill", "#69b3a2")
-                    .call(this.drag(this.simulation))
-                    .on('click', (event, d) => this.onNodeClick(d)),
-                update => update,
-                exit => exit.remove()
-            );
+        const node = this.g.selectAll<SVGCircleElement, CustomNode>("circle")
+            .data(this.nodes, (d: CustomNode) => d.id);
+
+        node.exit().remove();
+
+        const nodeEnter = node.enter().append("circle")
+            .attr("r", 5)
+            .attr("fill", "#69b3a2")
+            .call(this.drag(this.simulation))
+            .on('click', (event, d) => this.onNodeClick(d));
+
+        const nodeMerge = nodeEnter.merge(node);
 
         // Update labels
-        const label = this.g.selectAll("text")
-            .data(nodes, (d: CustomNode) => d.id)
-            .join(
-                enter => enter.append("text")
-                    .text(d => d.title)
-                    .attr('x', 6)
-                    .attr('y', 3),
-                update => update,
-                exit => exit.remove()
-            );
+        const label = this.g.selectAll<SVGTextElement, CustomNode>("text")
+            .data(this.nodes, (d: CustomNode) => d.id);
 
-        node.on('mouseover', (event, d) => this.showTooltip(event, d))
+        label.exit().remove();
+
+        const labelEnter = label.enter().append("text")
+            .text(d => d.title)
+            .attr('x', 6)
+            .attr('y', 3);
+
+        const labelMerge = labelEnter.merge(label);
+
+        nodeMerge.on('mouseover', (event, d) => this.showTooltip(event, d))
             .on('mouseout', () => this.hideTooltip());
 
         this.simulation.on("tick", () => {
-            link
+            linkMerge
                 .attr("x1", d => (d.source as CustomNode).x!)
                 .attr("y1", d => (d.source as CustomNode).y!)
                 .attr("x2", d => (d.target as CustomNode).x!)
                 .attr("y2", d => (d.target as CustomNode).y!);
 
-            node
+            nodeMerge
                 .attr("cx", d => d.x!)
                 .attr("cy", d => d.y!);
 
-            label
+            labelMerge
                 .attr("x", d => d.x! + 6)
                 .attr("y", d => d.y! + 3);
         });

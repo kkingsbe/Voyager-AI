@@ -14,6 +14,14 @@ export class DocumentGraphModal extends Modal {
         this.documentId = documentId;
     }
 
+    addNodes(nodes: CustomNode[]) {
+        this.graphRenderer.addNodes(nodes);
+    }
+
+    addLinks(links: Link[]) {
+        this.graphRenderer.addLinks(links);
+    }
+
     async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
@@ -42,7 +50,10 @@ export class DocumentGraphModal extends Modal {
             const response: DocumentGraphResponse = await this.apiClient.getDocumentGraph(documentId);
             const nodes = response.documents;
             const links = this.transformLinks(response.documents, response.links);
-            this.graphRenderer.renderGraph(nodes, links);
+            this.graphRenderer.clear();
+            this.graphRenderer.addNodes(nodes);
+            this.graphRenderer.addLinks(links);
+            this.graphRenderer.renderGraph();
         } catch (error) {
             console.error('Error fetching document graph data:', error);
             new Notice('Failed to load document graph data. Please try again.');

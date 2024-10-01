@@ -1,5 +1,6 @@
 import axios from "axios";
 import { DocumentGraphResponse } from '../modals/documentGraphModal/types';
+import io from 'socket.io-client';
 
 export interface SearchResult {
     score: number;
@@ -64,6 +65,33 @@ export class ApiClient {
         });
 
         return res.data;
+    }
+
+    async chatWebSocket(query: string, onChunk: (chunk: string) => void, onComplete: () => void, currentDocumentId?: string) {
+        const socket = io('http://localhost:3000');
+
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket');
+            socket.emit('chat', {
+                api_key: this.apiKey,
+                message: query,
+                current_document_id: currentDocumentId || null
+            });
+        });
+
+        socket.on('chatResponse', (chunk: string) => {
+            onChunk(chunk);
+        });
+
+        socket.on('chatComplete', () => {
+            onComplete();
+            socket.disconnect();
+        });
+
+        socket.on('error', (error: string) => {
+            console.error('WebSocket error:', error);
+            socket.disconnect();
+        });
     }
 
     async chat(query: string, currentDocumentId?: string) {

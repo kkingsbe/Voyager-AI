@@ -90,6 +90,14 @@ export default class MyPlugin extends Plugin {
 		this.addSummaryButton();
 
 		this.addCommand({
+			id: 'summarize-document',
+			name: 'Summarize Document',
+			callback: () => {
+				this.summarizeActiveDocument();
+			}
+		})
+
+		this.addCommand({
 			id: 'contextual-search',
 			name: 'Contextual Search',
 			callback: () => {
@@ -317,11 +325,28 @@ export default class MyPlugin extends Plugin {
 
 	private async summarizeActiveDocument() {
 		const activeFile = this.app.workspace.getActiveFile();
+		console.log("Summarizing active document", activeFile);
 		if (activeFile) {
 			new Notice('Summarizing document: ' + activeFile.name);
 			const chatModal = new ChatModal(this.app, this.searchEngine.apiClient);
 			chatModal.open();
-			chatModal.sendAutomaticMessage("Summarize the current document");
+			
+			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+			console.log("Frontmatter:", frontmatter);
+			const currentDocumentId = frontmatter?.["voyager-id"] ?? undefined;
+			
+			let fullResponse = '';
+			await this.searchEngine.apiClient.chatWebSocket(
+				"Summarize the current document",
+				(chunk) => {
+					fullResponse += chunk;
+					chatModal.updateAssistantMessage(fullResponse, false);
+				},
+				() => {
+					chatModal.updateAssistantMessage(fullResponse, true);
+				},
+				currentDocumentId
+			);
 		} else {
 			new Notice('No active document to summarize');
 		}

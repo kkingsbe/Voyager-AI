@@ -75,7 +75,7 @@ export class ChatModal extends Modal {
 		}
 	}
 
-	private updateAssistantMessage(content: string, isComplete: boolean) {
+	public updateAssistantMessage(content: string, isComplete: boolean) {
 		const lastMessage = this.chatContainer.lastElementChild;
 		if (lastMessage && lastMessage.querySelector('strong')?.textContent === 'Voyager: ') {
 			const contentEl = lastMessage.querySelector('.search-result-secondary-text');

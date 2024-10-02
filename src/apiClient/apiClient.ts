@@ -10,15 +10,17 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'https://voyager-backend.onrender.com';
-    // private baseUrl: string = 'http://localhost:3000';
+    // private baseUrl: string = 'https://voyager-backend.onrender.com';
+    private baseUrl: string = 'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;
+
+        console.log("Api client with api key:", this.apiKey);
     }
 
     async embedDocument(title: string, content: string, id: string, creationDate: string) {
-        console.log("Embedding document", title, content, id);
+        // console.log("Embedding document", title, content, id);
         const res = await axios.post(this.baseUrl + "/user/index-document",
             {
                 title,
@@ -127,6 +129,17 @@ export class ApiClient {
 
     async getDocumentGraph(documentId: string): Promise<DocumentGraphResponse> {
         const res = await axios.get<DocumentGraphResponse>(this.baseUrl + "/user/document-graph", {
+            params: {
+                api_key: this.apiKey,
+                document_id: documentId
+            }
+        });
+
+        return res.data;
+    }
+
+    async getSimilarDocuments(documentId: string): Promise<SearchResult[]> {
+        const res = await axios.get<SearchResult[]>(this.baseUrl + "/search/similar-documents", {
             params: {
                 api_key: this.apiKey,
                 document_id: documentId

@@ -49,4 +49,8 @@ export class SearchEngine {
     async generateBlurb(query: string, title: string, content: string) {
         return this.apiClient.generateBlurb(query, title, content);
     }
+
+    async getSimilarDocuments(documentId: string) {
+        return this.apiClient.getSimilarDocuments(documentId);
+    }
 }

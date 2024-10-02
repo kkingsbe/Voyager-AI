@@ -1,4 +1,4 @@
-import { EventRef, MarkdownPostProcessorContext, Notice, Plugin, TFile } from 'obsidian';
+import { EventRef, MarkdownPostProcessorContext, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { SearchEngine } from 'searchengine';
 import { v4 as uuidv4 } from 'uuid';
 import { debounce } from 'lodash';
@@ -8,7 +8,7 @@ import { SettingsTab } from 'views/settingsTab';
 import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
 import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
-import { DocumentGraphModal } from 'modals/documentGraphModal';
+import { SimilarDocumentsView } from './views/similarDocumentsview';
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -28,6 +28,7 @@ export default class MyPlugin extends Plugin {
 	updateComments: ((comments: IComment[]) => void) | undefined;
 	private autoEmbedListener: EventRef | null = null;
 	private summaryButton: HTMLElement;
+	private similarDocumentsLeaf: WorkspaceLeaf | null = null;
 
 	private addNotificationBell() {
 		this.notificationBell = this.addStatusBarItem();
@@ -88,6 +89,7 @@ export default class MyPlugin extends Plugin {
 		}, 5000));
 
 		this.addSummaryButton();
+		this.addSimilarDocumentsPanel();
 
 		this.addCommand({
 			id: 'summarize-document',
@@ -165,24 +167,29 @@ export default class MyPlugin extends Plugin {
 			}
 		})
 
-		this.addCommand({
-			id: 'open-document-graph',
-			name: 'Open Document Graph',
-			callback: () => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
-					const voyagerId = frontmatter?.['voyager-id'];
-					if (voyagerId) {
-						new DocumentGraphModal(this.app, this.searchEngine.apiClient, voyagerId).open();
-					} else {
-						new Notice('Voyager ID not found in the frontmatter of the active document.');
-					}
-				} else {
-					new Notice('No active document to open the document graph.');
-				}
-			}
-		});
+		// this.addCommand({
+		// 	id: 'open-document-graph',
+		// 	name: 'Open Document Graph',
+		// 	callback: () => {
+		// 		const activeFile = this.app.workspace.getActiveFile();
+		// 		if (activeFile) {
+		// 			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+		// 			const voyagerId = frontmatter?.['voyager-id'];
+		// 			if (voyagerId) {
+		// 				new DocumentGraphModal(this.app, this.searchEngine.apiClient, voyagerId).open();
+		// 			} else {
+		// 				new Notice('Voyager ID not found in the frontmatter of the active document.');
+		// 			}
+		// 		} else {
+		// 			new Notice('No active document to open the document graph.');
+		// 		}
+		// 	}
+		// });
+
+		this.registerView(
+			'voyager-similar-documents',
+			(leaf) => new SimilarDocumentsView(leaf, this, "#009FFF", "#ec2F4B")
+		);
 
 		this.loadStyles();
 	}
@@ -244,7 +251,7 @@ export default class MyPlugin extends Plugin {
 	async embedActiveDocument() {
 		const activeFile = this.app.workspace.getActiveFile();
 		
-		console.log("Embedding active document", activeFile);
+		//console.log("Embedding active document", activeFile);
 		if (activeFile) {
 			await this.embedDocument(activeFile);
 		}
@@ -272,11 +279,32 @@ export default class MyPlugin extends Plugin {
 		leaf?.setViewState({ type: 'chat-panel' })
 	}
 
+	addSimilarDocumentsPanel() {
+		const leaf = this.app.workspace.getLeftLeaf(false);
+		leaf?.setViewState({ type: 'voyager-similar-documents' });
+	}
+
+	async activateView() {
+		if (this.similarDocumentsLeaf) {
+			this.app.workspace.revealLeaf(this.similarDocumentsLeaf);
+			return;
+		}
+
+		this.similarDocumentsLeaf = this.app.workspace.getLeftLeaf(false)!;
+		await this.similarDocumentsLeaf.setViewState({
+			type: 'voyager-similar-documents',
+			active: true,
+		});
+
+		this.app.workspace.revealLeaf(this.similarDocumentsLeaf);
+	}
+
 	onunload() {
 		if (this.autoEmbedListener) {
 			this.app.vault.offref(this.autoEmbedListener);
 		}
-		this.app.workspace.detachLeavesOfType('chat-panel')
+		this.app.workspace.detachLeavesOfType('chat-panel');
+		this.app.workspace.detachLeavesOfType('voyager-similar-documents');
 	}
 
 	async loadSettings() {

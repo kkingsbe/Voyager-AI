@@ -1,10 +1,12 @@
 import { App, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
+import { MarkdownView } from "obsidian";
 
 export class ChatModal extends Modal {
 	private apiClient: ApiClient;
 	private inputField: HTMLInputElement;
 	private chatContainer: HTMLElement;
+	private messageHistory: { sender: string; message: string }[] = [];
 
 	constructor(app: App, apiClient: ApiClient) {
 		super(app);
@@ -76,39 +78,46 @@ export class ChatModal extends Modal {
 	}
 
 	public updateAssistantMessage(content: string, isComplete: boolean) {
-		const lastMessage = this.chatContainer.lastElementChild;
-		if (lastMessage && lastMessage.querySelector('strong')?.textContent === 'Voyager: ') {
-			const contentEl = lastMessage.querySelector('.search-result-secondary-text');
-			if (contentEl instanceof HTMLElement) {
-				contentEl.empty(); // Clear existing content
-				if (isComplete) {
-					MarkdownRenderer.renderMarkdown(content, contentEl, '', this as unknown as Component);
-				} else {
-					this.renderSimplifiedMarkdown(content, contentEl); // Use simplified markdown for streaming
-				}
-			}
+		if (this.messageHistory.length > 0 && this.messageHistory[this.messageHistory.length - 1].sender === 'Voyager') {
+			this.messageHistory[this.messageHistory.length - 1].message = content;
 		} else {
-			this.addMessageToChat('Voyager', content);
+			this.messageHistory.push({ sender: 'Voyager', message: content });
 		}
-		this.chatContainer.scrollTo(0, this.chatContainer.scrollHeight);
+		this.renderMessages();
 	}
 
 	private addMessageToChat(sender: string, message: string) {
-		const messageEl = this.chatContainer.createEl('div', { cls: 'chat-message search-result-card' });
-		messageEl.createEl('strong', { text: sender + ': ', cls: 'search-result-title' });
-		
-		const contentEl = messageEl.createEl('div', { cls: 'search-result-secondary-text' });
-		
-		if (sender === 'Voyager') {
-			this.renderMarkdownWithCustomLinks(message, contentEl);
-		} else {
-			contentEl.textContent = message;
-		}
+		this.messageHistory.push({ sender, message });
+		this.renderMessages();
+	}
 
-		const copyButton = messageEl.createEl('button', { text: 'Copy', cls: 'chat-copy-button' });
-		copyButton.addEventListener('click', () => this.copyToClipboard(message));
+	private renderMessages() {
+		this.chatContainer.empty();
+		this.messageHistory.forEach(({ sender, message }) => {
+			const messageEl = this.chatContainer.createEl('div', { cls: 'chat-message search-result-card' });
+			messageEl.createEl('strong', { text: sender + ': ', cls: 'search-result-title' });
+			
+			const contentEl = messageEl.createEl('div', { cls: 'search-result-secondary-text' });
+			
+			if (sender === 'Voyager') {
+				// Use MarkdownRenderer to render the message as markdown
+				MarkdownRenderer.renderMarkdown(message, contentEl, '', null as unknown as Component);
+				contentEl.setAttribute('data-original-markdown', message);
+			} else {
+				contentEl.textContent = message;
+			}
 
-		this.chatContainer.scrollTo(0, this.chatContainer.scrollHeight);
+			const copyButton = messageEl.createEl('button', { text: 'Copy', cls: 'chat-copy-button' });
+			copyButton.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const textToCopy = sender === 'Voyager' ? contentEl.getAttribute('data-original-markdown') || contentEl.innerText : message;
+				this.copyToClipboard(textToCopy);
+			});
+		});
+
+		// Scroll to the bottom of the chat container
+		this.chatContainer.scrollTo({ top: this.chatContainer.scrollHeight, behavior: 'smooth' });
 	}
 
 	private renderMarkdownWithCustomLinks(markdown: string, element: HTMLElement) {
@@ -198,11 +207,13 @@ export class ChatModal extends Modal {
 	}
 
 	private copyToClipboard(text: string) {
+		console.log('Copying to clipboard:', text);  // Add this line for debugging
 		navigator.clipboard.writeText(text).then(() => {
-			new Notice('Message copied to clipboard');
+			console.log('Text copied successfully');  // Add this line for debugging
+			new Notice('Message copied to clipboard', 2000);
 		}, (err) => {
 			console.error('Could not copy text: ', err);
-			new Notice('Failed to copy message');
+			new Notice('Failed to copy message', 2000);
 		});
 	}
 
@@ -213,8 +224,19 @@ export class ChatModal extends Modal {
 			const activeFile = this.app.workspace.getActiveFile();
 			const frontmatter = activeFile ? this.app.metadataCache.getFileCache(activeFile)?.frontmatter : null;
 			const currentDocumentId = frontmatter?.["voyager-id"] ?? undefined;
-			const response = await this.apiClient.chat(message, currentDocumentId);
-			this.addMessageToChat('Voyager', response);
+			
+			let fullResponse = '';
+			await this.apiClient.chatWebSocket(
+				message,
+				(chunk) => {
+					fullResponse += chunk;
+					this.updateAssistantMessage(fullResponse, false);
+				},
+				() => {
+					this.updateAssistantMessage(fullResponse, true);
+				},
+				currentDocumentId
+			);
 		} catch (error) {
 			console.error('Error in chat:', error);
 			this.addMessageToChat('Error', 'An error occurred while processing your request.');

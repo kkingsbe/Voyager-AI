@@ -511,3 +511,14 @@ If your plugin does not need CSS, delete this file.
     display: inline;
     white-space: nowrap;
 }
+
+.chat-message {
+  margin-bottom: 10px;
+  animation: none !important;
+  transition: none !important;
+}
+
+.search-result-secondary-text {
+  animation: none !important;
+  transition: none !important;
+}

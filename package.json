@@ -1,6 +1,6 @@
 {
 	"name": "voyager-ai",
-	"version": "1.0.0",
+	"version": "0.1.3",
 	"description": "Voyager AI",
 	"main": "main.js",
 	"scripts": {

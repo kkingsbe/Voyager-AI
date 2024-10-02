@@ -60,10 +60,9 @@ export class SimilarDocumentsView extends ItemView {
 
         this.documentEditListener = this.app.vault.on('modify', debounce(async (file: TFile) => {
             if (file instanceof TFile) {
-                new Notice(`Document ${file.name} was edited`);
                 await this.updateSimilarDocuments(file);
             }
-        }, 2000));
+        }, 4000));
     }
 
     private unregisterDocumentEditListener() {

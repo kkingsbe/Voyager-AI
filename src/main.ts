@@ -86,7 +86,7 @@ export default class MyPlugin extends Plugin {
 					await this.embedDocument(file);
 				}
 			}
-		}, 5000));
+		}, 2000));
 
 		this.addSummaryButton();
 		this.addSimilarDocumentsPanel();

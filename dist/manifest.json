@@ -1,7 +1,7 @@
 {
 	"id": "voyager",
 	"name": "Voyager",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"minAppVersion": "0.15.0",
 	"description": "A GPT-4o powered sidekick to enhance note taking within Obsidian.",
 	"author": "Kyle Kingsberry",

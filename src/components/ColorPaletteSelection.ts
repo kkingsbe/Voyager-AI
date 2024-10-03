@@ -9,13 +9,15 @@ interface ColorPalette {
 
 const colorPalettes: ColorPalette[] = [
   { name: "By Design", startColor: "#009FFF", endColor: "#ec2F4B" },
+  { name: "Pacific Dream", startColor: "#34e89e", endColor: "#0f3443" },
+  { name: "Purpink", startColor: "#7F00FF", endColor: "#E100FF" },
   { name: "Wiretap", startColor: "#8A2387", endColor: "#F27121" },
-  { name: "Summer Dog", startColor: "#a8ff78", endColor: "#78ffd6" },
+  { name: "Sublime Light", startColor: "#FC5C7D", endColor: "#6A82FB" },
+  { name: "Shifter", startColor: "#bc4e9c", endColor: "#f80759" }
 ];
 
 export class ColorPaletteSelection extends Setting {
   private plugin: MyPlugin;
-  private selectedPaletteText: HTMLElement;
 
   constructor(containerEl: HTMLElement, plugin: MyPlugin) {
     super(containerEl);
@@ -23,13 +25,6 @@ export class ColorPaletteSelection extends Setting {
 
     this.setName("Similarity Score Color Palette")
       .setDesc("Choose a color palette for the similarity score squares");
-
-    // Add a text element to display the selected palette
-    this.selectedPaletteText = this.controlEl.createEl("div", {
-      cls: "color-palette-selected",
-    });
-    this.selectedPaletteText.style.marginBottom = "10px";
-    this.selectedPaletteText.style.fontWeight = "bold";
 
     const gridContainer = this.controlEl.createEl("div", {
       cls: "color-palette-grid",
@@ -84,9 +79,6 @@ export class ColorPaletteSelection extends Setting {
   }
 
   private updateSelection(selectedName: string) {
-    // Update the selected palette text
-    this.selectedPaletteText.textContent = `Selected: ${selectedName}`;
-
     const cards = this.controlEl.querySelectorAll(".color-palette-card");
     cards.forEach((card) => {
       const title = card.querySelector(".color-palette-title");

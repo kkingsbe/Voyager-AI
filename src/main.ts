@@ -42,6 +42,7 @@ export default class MyPlugin extends Plugin {
 	private summaryButton: HTMLElement;
 	private similarDocumentsLeaf: WorkspaceLeaf | null = null;
 	private similarDocumentsView: SimilarDocumentsView | null = null;
+	private viewInitialized = false;
 
 	private addNotificationBell() {
 		this.notificationBell = this.addStatusBarItem();
@@ -63,6 +64,15 @@ export default class MyPlugin extends Plugin {
 		
 		new Notice("Voyager loaded");
 		//this.addNotificationBell();
+
+		// Register the view type immediately
+		this.registerView(
+			'voyager-similar-documents',
+			(leaf) => new SimilarDocumentsView(leaf, this)
+		);
+
+		// Attempt to initialize the view
+		this.initializeView();
 
 		const { plugin: highlightPluginExtension, updateComments } = initializeHighlightPlugin([]);
 		this.registerEditorExtension([highlightPluginExtension]);
@@ -95,14 +105,20 @@ export default class MyPlugin extends Plugin {
 		this.autoEmbedListener = this.app.vault.on('modify', debounce(async (file: TFile) => {
 			if (file instanceof TFile) {
 				if(this.settings.autoEmbedOnEdit) {
-					new Notice(`Embedding document ${file.name}`);
+					//new Notice(`Embedding document ${file.name}`);
 					await this.embedDocument(file);
 				}
 			}
 		}, 2000));
 
 		this.addSummaryButton();
-		this.addSimilarDocumentsPanel();
+		
+		// Replace the existing workspace.onLayoutReady call
+		this.app.workspace.onLayoutReady(() => {
+			if (!this.viewInitialized) {
+				this.initializeView();
+			}
+		});
 
 		this.addCommand({
 			id: 'summarize-document',
@@ -199,13 +215,9 @@ export default class MyPlugin extends Plugin {
 		// 	}
 		// });
 
-		this.registerView(
-			'voyager-similar-documents',
-			(leaf) => {
-				this.similarDocumentsView = new SimilarDocumentsView(leaf, this);
-				return this.similarDocumentsView;
-			}
-		);
+		this.addRibbonIcon('search', 'Voyager Similar Documents', () => {
+			this.activateView();
+		});
 
 		this.loadStyles();
 	}
@@ -295,32 +307,42 @@ export default class MyPlugin extends Plugin {
 		leaf?.setViewState({ type: 'chat-panel' })
 	}
 
-	addSimilarDocumentsPanel() {
-		const leaf = this.app.workspace.getLeftLeaf(false);
-		leaf?.setViewState({ type: 'voyager-similar-documents' });
+	private async initializeView() {
+		let leaf = this.app.workspace.getLeavesOfType('voyager-similar-documents')[0];
+		
+		if (!leaf) {
+			leaf = this.app.workspace.getLeftLeaf(false)!;
+			await leaf.setViewState({
+				type: 'voyager-similar-documents',
+				active: true,
+			});
+		}
+
+		this.similarDocumentsLeaf = leaf;
+		this.similarDocumentsView = leaf.view as SimilarDocumentsView;
+		this.viewInitialized = true;
+
+		// Ensure the leaf is visible
+		this.app.workspace.revealLeaf(leaf);
 	}
 
 	async activateView() {
-		if (this.similarDocumentsLeaf) {
+		if (!this.viewInitialized) {
+			await this.initializeView();
+		} else if (this.similarDocumentsLeaf) {
 			this.app.workspace.revealLeaf(this.similarDocumentsLeaf);
-			return;
 		}
-
-		this.similarDocumentsLeaf = this.app.workspace.getLeftLeaf(false)!;
-		await this.similarDocumentsLeaf.setViewState({
-			type: 'voyager-similar-documents',
-			active: true,
-		});
-
-		this.app.workspace.revealLeaf(this.similarDocumentsLeaf);
 	}
 
 	onunload() {
 		if (this.autoEmbedListener) {
 			this.app.vault.offref(this.autoEmbedListener);
 		}
-		this.app.workspace.detachLeavesOfType('chat-panel');
-		this.app.workspace.detachLeavesOfType('voyager-similar-documents');
+		
+		// Don't detach the leaves, just clear our references
+		this.similarDocumentsLeaf = null;
+		this.similarDocumentsView = null;
+		this.viewInitialized = false;
 	}
 
 	async loadSettings() {
@@ -330,6 +352,7 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.searchEngine.updateApiKey(this.settings.apiKey);
+		console.log("Similar documents view", this.similarDocumentsView)
 		
 		if(this.similarDocumentsView) {
 			this.similarDocumentsView.updateSettings(this.settings.similarityGradient)

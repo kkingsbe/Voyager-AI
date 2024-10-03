@@ -1,6 +1,6 @@
 import { FileHelper } from 'lib/fileHelper';
 import MyPlugin, { VoyagerSimilarityGradient } from 'main';
-import { ItemView, WorkspaceLeaf, TFile, debounce, Notice, EventRef } from 'obsidian';
+import { ItemView, WorkspaceLeaf, TFile, debounce, Notice, EventRef, MarkdownRenderer, Component } from 'obsidian';
 
 export class SimilarDocumentsView extends ItemView {
     private documentEditListener: EventRef | null = null;
@@ -124,7 +124,7 @@ export class SimilarDocumentsView extends ItemView {
             const minScore = Math.min(...scores);
             const maxScore = Math.max(...scores);
 
-            similarDocuments.forEach((doc) => {
+            similarDocuments.forEach((doc, index) => {
                 const navFile = similarDocsSection.createEl('div', { cls: 'nav-file' });
                 const navFileTitle = navFile.createEl('div', { cls: 'nav-file-title' });
                 
@@ -148,6 +148,9 @@ export class SimilarDocumentsView extends ItemView {
                 link.style.textOverflow = 'ellipsis';
                 link.style.whiteSpace = 'nowrap';
                 link.style.flexGrow = '1';
+                link.style.textDecoration = 'none'; // Remove underline
+                link.style.color = 'var(--text-normal)'; // Use default text color
+                link.style.fontWeight = '500'; // Set font weight to medium (500)
 
                 // Add tooltip to the document title
                 link.setAttribute('aria-label', `Similarity: ${(doc.score * 100).toFixed(2)}%`);
@@ -156,6 +159,106 @@ export class SimilarDocumentsView extends ItemView {
                 link.addEventListener('click', (event) => {
                     event.preventDefault();
                     this.app.workspace.openLinkText(doc.title, '');
+                });
+
+                // Create a card element (initially hidden)
+                const card = navFile.createEl('div', { cls: 'similar-document-card' });
+                card.style.display = 'none';
+                card.style.position = 'absolute';
+                card.style.left = '0';
+                card.style.right = '0';
+                card.style.height = '200px';
+                card.style.backgroundColor = 'var(--background-primary)';
+                card.style.zIndex = '1000';
+                card.style.padding = '20px';
+                card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                card.style.borderRadius = '4px';
+                card.style.overflow = 'auto';
+                card.style.opacity = '0';
+                card.style.transition = 'opacity 0.1s ease';
+
+                // Add content to the card
+                const cardHeader = card.createEl('div', { cls: 'card-header' });
+                cardHeader.style.marginBottom = '10px';
+
+                cardHeader.createEl('h3', { text: doc.title, cls: 'card-title' });
+                cardHeader.createEl('p', { text: `Similarity: ${(doc.score * 100).toFixed(2)}%`, cls: 'card-similarity' });
+
+                // Add a divider
+                const divider = card.createEl('hr', { cls: 'card-divider' });
+                divider.style.margin = '10px 0';
+                divider.style.border = 'none';
+                divider.style.borderTop = '1px solid var(--background-modifier-border)';
+
+                // Create a container for the markdown summary
+                const summaryContainer = card.createEl('div', { cls: 'summary-container' });
+
+                let hoverTimeout: NodeJS.Timeout | null = null;
+                let hideTimeout: NodeJS.Timeout | null = null;
+                let isMouseOver = false;
+
+                // Add hover event listeners
+                navFile.addEventListener('mouseenter', () => {
+                    isMouseOver = true;
+                    if (hideTimeout) {
+                        clearTimeout(hideTimeout);
+                        hideTimeout = null;
+                    }
+                    hoverTimeout = setTimeout(() => {
+                        for (let i = index + 1; i < similarDocsSection.children.length; i++) {
+                            const nextElement = similarDocsSection.children[i] as HTMLElement;
+                            nextElement.style.transition = 'transform 0.3s ease';
+                            nextElement.style.transform = 'translateY(200px)';
+                        }
+                        // Include the refresh button in the sliding effect
+                        const refreshButton = container.querySelector('.similar-documents-refresh') as HTMLElement;
+                        if (refreshButton) {
+                            refreshButton.style.transition = 'transform 0.3s ease';
+                            refreshButton.style.transform = 'translateY(200px)';
+                        }
+                        // Show and fade in the card
+                        card.style.display = 'block';
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                        }, 0);
+
+                        // Generate and stream the summary only if it's empty
+                        if (summaryContainer.childElementCount === 0) {
+                            this.generateAndStreamSummary(doc.id, summaryContainer);
+                        }
+                    }, 500);
+                });
+
+                navFile.addEventListener('mouseleave', () => {
+                    isMouseOver = false;
+                    if (hoverTimeout) {
+                        clearTimeout(hoverTimeout);
+                        hoverTimeout = null;
+                    }
+                    
+                    hideTimeout = setTimeout(() => {
+                        if (!isMouseOver) {
+                            this.hideCard(card, similarDocsSection, index, container as HTMLElement);
+                        }
+                    }, 100); // Small delay to allow mouse to enter the card
+                });
+
+                // Add event listeners for the card itself
+                card.addEventListener('mouseenter', () => {
+                    isMouseOver = true;
+                    if (hideTimeout) {
+                        clearTimeout(hideTimeout);
+                        hideTimeout = null;
+                    }
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    isMouseOver = false;
+                    hideTimeout = setTimeout(() => {
+                        if (!isMouseOver) {
+                            this.hideCard(card, similarDocsSection, index, container as HTMLElement);
+                        }
+                    }, 100);
                 });
             });
         }
@@ -250,6 +353,57 @@ export class SimilarDocumentsView extends ItemView {
         refreshButton.style.display = 'block';
         refreshButton.style.margin = '10px auto';
         refreshButton.style.cursor = 'pointer';
+        refreshButton.style.transition = 'transform 0.3s ease'; // Add transition for smooth movement
         refreshButton.addEventListener('click', () => this.refreshSimilarDocuments());
+    }
+
+    private async generateAndStreamSummary(documentId: string, container: HTMLElement) {
+        try {
+            let fullSummary = '';
+            await this.plugin.searchEngine.apiClient.chatWebSocket(
+                "Summarize the provided document in a few sentences. The provided document is actually a search result from Voyagers similar documents view.",
+                (chunk) => {
+                    fullSummary += chunk;
+                    this.updateSummary(container, fullSummary);
+                },
+                () => {
+                    this.updateSummary(container, fullSummary, true);
+                },
+                documentId
+            );
+        } catch (error) {
+            console.error('Error generating summary:', error);
+            container.setText('Failed to generate summary.');
+        }
+    }
+
+    private updateSummary(container: HTMLElement, content: string, isComplete: boolean = false) {
+        container.empty();
+        MarkdownRenderer.renderMarkdown(content, container, '', null as unknown as Component);
+        if (isComplete) {
+            // Optionally, you can add some styling or indication that the summary is complete
+        }
+    }
+
+    private hideCard(card: HTMLElement, similarDocsSection: HTMLElement, index: number, container: HTMLElement) {
+        for (let i = index + 1; i < similarDocsSection.children.length; i++) {
+            const nextElement = similarDocsSection.children[i] as HTMLElement;
+            nextElement.style.transform = 'translateY(0)';
+        }
+        // Reset the refresh button position
+        const refreshButton = container.querySelector('.similar-documents-refresh') as HTMLElement;
+        if (refreshButton) {
+            refreshButton.style.transform = 'translateY(0)';
+        }
+        // Hide the card
+        card.style.opacity = '0';
+        setTimeout(() => {
+            card.style.display = 'none';
+            // Clear the summary when hiding the card
+            const summaryContainer = card.querySelector('.summary-container');
+            if (summaryContainer) {
+                summaryContainer.innerHTML = '';
+            }
+        }, 100);
     }
 }

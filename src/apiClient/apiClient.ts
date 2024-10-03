@@ -6,12 +6,13 @@ export interface SearchResult {
     score: number;
     title: string;
     document: string;
+    id: string;
 }
 
 export class ApiClient {
     apiKey: string;
-    // private baseUrl: string = 'https://voyager-backend.onrender.com';
-    private baseUrl: string = 'http://localhost:3000';
+    private baseUrl: string = 'https://voyager-backend.onrender.com';
+    // private baseUrl: string = 'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;

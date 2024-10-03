@@ -10,18 +10,30 @@ import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
 import { SimilarDocumentsView } from './views/similarDocumentsview';
 
-interface MyPluginSettings {
-	apiKey: string;
-	autoEmbedOnEdit: boolean;
+export interface VoyagerSimilarityGradient {
+	name: string;
+	startColor: string;
+	endColor: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+export interface VoyagerSettings {
+	apiKey: string;
+	autoEmbedOnEdit: boolean;
+	similarityGradient: VoyagerSimilarityGradient
+}
+
+const DEFAULT_SETTINGS: VoyagerSettings = {
 	apiKey: '',
-	autoEmbedOnEdit: true
+	autoEmbedOnEdit: true,
+	similarityGradient: {
+		name: "Voyager",
+		startColor: "#009FFF",
+		endColor: "#ec2F4B"
+	}
 }
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: VoyagerSettings;
 	searchEngine: SearchEngine;
 	notificationBell: HTMLElement;
 	notificationCount: number = 5;
@@ -29,6 +41,7 @@ export default class MyPlugin extends Plugin {
 	private autoEmbedListener: EventRef | null = null;
 	private summaryButton: HTMLElement;
 	private similarDocumentsLeaf: WorkspaceLeaf | null = null;
+	private similarDocumentsView: SimilarDocumentsView | null = null;
 
 	private addNotificationBell() {
 		this.notificationBell = this.addStatusBarItem();
@@ -188,7 +201,10 @@ export default class MyPlugin extends Plugin {
 
 		this.registerView(
 			'voyager-similar-documents',
-			(leaf) => new SimilarDocumentsView(leaf, this, "#009FFF", "#ec2F4B")
+			(leaf) => {
+				this.similarDocumentsView = new SimilarDocumentsView(leaf, this);
+				return this.similarDocumentsView;
+			}
 		);
 
 		this.loadStyles();
@@ -314,6 +330,10 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.searchEngine.updateApiKey(this.settings.apiKey);
+		
+		if(this.similarDocumentsView) {
+			this.similarDocumentsView.updateSettings(this.settings.similarityGradient)
+		}
 	}
 
 	updateNotificationCount(count: number) {

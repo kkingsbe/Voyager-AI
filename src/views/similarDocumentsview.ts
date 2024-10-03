@@ -1,5 +1,5 @@
 import { FileHelper } from 'lib/fileHelper';
-import MyPlugin from 'main';
+import MyPlugin, { VoyagerSimilarityGradient } from 'main';
 import { ItemView, WorkspaceLeaf, TFile, debounce, Notice, EventRef } from 'obsidian';
 
 export class SimilarDocumentsView extends ItemView {
@@ -9,11 +9,11 @@ export class SimilarDocumentsView extends ItemView {
     private startColor: [number, number, number];
     private endColor: [number, number, number];
 
-    constructor(leaf: WorkspaceLeaf, plugin: MyPlugin, startColor: string, endColor: string) {
+    constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
         super(leaf);
         this.plugin = plugin;
-        this.startColor = this.hexToHSV(startColor);
-        this.endColor = this.hexToHSV(endColor);
+        this.startColor = this.hexToHSV(this.plugin.settings.similarityGradient.startColor);
+        this.endColor = this.hexToHSV(this.plugin.settings.similarityGradient.endColor);
     }
 
     getViewType() {
@@ -22,6 +22,12 @@ export class SimilarDocumentsView extends ItemView {
 
     getDisplayText() {
         return 'Voyager Similar Documents';
+    }
+
+    updateSettings(gradient: VoyagerSimilarityGradient) {
+        this.startColor = this.hexToHSV(gradient.startColor);
+        this.endColor = this.hexToHSV(gradient.endColor);
+        this.refreshSimilarDocuments()
     }
 
     async onOpen() {
@@ -133,14 +139,19 @@ export class SimilarDocumentsView extends ItemView {
                 colorSquare.style.flexShrink = '0';
                 colorSquare.style.width = '10px';
                 colorSquare.style.height = '10px';
-                colorSquare.style.backgroundColor = this.getInterpolatedColor(1 - normalizedSimilarity); // Use 1 - normalizedSimilarity to invert the scale
+                colorSquare.style.backgroundColor = this.getInterpolatedColor(1 - normalizedSimilarity); // Use doc.score to base the color off of the un-normalized score
                 colorSquare.style.marginRight = '5px';
+                colorSquare.style.borderRadius = '2px'; // Add border radius
 
                 const link = navFileTitle.createEl('a', { text: doc.title, cls: 'nav-file-title-content' });
                 link.style.overflow = 'hidden';
                 link.style.textOverflow = 'ellipsis';
                 link.style.whiteSpace = 'nowrap';
                 link.style.flexGrow = '1';
+
+                // Add tooltip to the document title
+                link.setAttribute('aria-label', `Similarity: ${(doc.score * 100).toFixed(2)}%`);
+                link.addClass('has-tooltip');
 
                 link.addEventListener('click', (event) => {
                     event.preventDefault();

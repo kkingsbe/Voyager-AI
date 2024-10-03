@@ -529,3 +529,22 @@ If your plugin does not need CSS, delete this file.
   animation: none !important;
   transition: none !important;
 }
+
+.has-tooltip {
+    position: relative;
+}
+
+.has-tooltip:hover::after {
+    content: attr(aria-label);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    white-space: pre-wrap;
+    z-index: 1000;
+}

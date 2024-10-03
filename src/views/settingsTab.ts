@@ -1,3 +1,4 @@
+import { ColorPaletteSelection } from "components/ColorPaletteSelection";
 import MyPlugin from "main";
 import { App, PluginSettingTab, Setting } from "obsidian";
 
@@ -34,5 +35,7 @@ export class SettingsTab extends PluginSettingTab {
 					this.plugin.settings.autoEmbedOnEdit = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new ColorPaletteSelection(containerEl, this.plugin);
 	}
 }

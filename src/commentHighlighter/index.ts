@@ -34,18 +34,14 @@ class HighlightPlugin implements PluginValue {
 
         for (let i = 1; i <= doc.lines; i++) {
             const line = doc.line(i);
-            console.log(`Checking line ${i}:`, line.text);
 
             this.comments.forEach(comment => {
-                console.log("Checking comment:", comment);
                 const regex = new RegExp(comment.source_text, 'gi');
                 let match;
 
                 while ((match = regex.exec(line.text)) !== null) {
-                    console.log("Match found:", match);
                     const from = line.from + match.index;
                     const to = from + match[0].length;
-                    console.log(`Adding decoration: from ${from} to ${to}`);
                     builder.add(from, to, Decoration.mark({
                         class: "voyager-highlight-keyword"
                     }));
@@ -54,7 +50,6 @@ class HighlightPlugin implements PluginValue {
         }
 
         const decorations = builder.finish();
-        console.log("Decorations built:", decorations);
         return decorations;
     }
 

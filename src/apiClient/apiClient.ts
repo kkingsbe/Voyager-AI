@@ -11,8 +11,8 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'https://voyager-backend.onrender.com';
-    // private baseUrl: string = 'http://localhost:3000';
+    // private baseUrl: string = 'https://voyager-backend.onrender.com';
+    private baseUrl: string = 'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;
@@ -146,6 +146,18 @@ export class ApiClient {
                 document_id: documentId
             }
         });
+
+        return res.data;
+    }
+
+    async getSimilarDocumentsWithWindow(documentId: string, content: string): Promise<SearchResult[]> {
+        const res = await axios.post<SearchResult[]>(this.baseUrl + "/search/similar-documents-with-window", {
+            document_id: documentId,
+            content,
+            api_key: this.apiKey
+        });
+
+        console.log("Similar documents with window:", res.data);
 
         return res.data;
     }

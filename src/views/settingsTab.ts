@@ -36,6 +36,18 @@ export class SettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		new Setting(containerEl)
+			.setName('Similarity Window')
+			.setDesc('The number of characters to include from the end of the current document')
+			.addText(text => text
+				.setPlaceholder('Enter the number of characters')
+				.setValue(this.plugin.settings.similarityWindow.toString())
+				.onChange(async (value) => {
+					this.plugin.settings.similarityWindow = parseInt(value);
+					await this.plugin.saveSettings();
+				}));
+		
+
 		new ColorPaletteSelection(containerEl, this.plugin);
 	}
 }

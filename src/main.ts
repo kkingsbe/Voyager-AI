@@ -8,7 +8,7 @@ import { SettingsTab } from 'views/settingsTab';
 import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor';
 import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
-import { SimilarDocumentsView } from './views/similarDocumentsview';
+import { SimilarDocumentsView } from './views/SimilarDocumentsView/similarDocumentsview';
 
 export interface VoyagerSimilarityGradient {
 	name: string;
@@ -19,7 +19,8 @@ export interface VoyagerSimilarityGradient {
 export interface VoyagerSettings {
 	apiKey: string;
 	autoEmbedOnEdit: boolean;
-	similarityGradient: VoyagerSimilarityGradient
+	similarityGradient: VoyagerSimilarityGradient,
+	similarityWindow: number
 }
 
 const DEFAULT_SETTINGS: VoyagerSettings = {
@@ -29,7 +30,8 @@ const DEFAULT_SETTINGS: VoyagerSettings = {
 		name: "Voyager",
 		startColor: "#009FFF",
 		endColor: "#ec2F4B"
-	}
+	},
+	similarityWindow: 200 //characters
 }
 
 export default class MyPlugin extends Plugin {
@@ -318,8 +320,18 @@ export default class MyPlugin extends Plugin {
 			});
 		}
 
+		// Check if the view is already an instance of SimilarDocumentsView
+		if (!(leaf.view instanceof SimilarDocumentsView)) {
+			this.similarDocumentsView = new SimilarDocumentsView(leaf, this);
+			await leaf.setViewState({
+				type: 'voyager-similar-documents',
+				active: true,
+			});
+		} else {
+			this.similarDocumentsView = leaf.view as SimilarDocumentsView;
+		}
+
 		this.similarDocumentsLeaf = leaf;
-		this.similarDocumentsView = leaf.view as SimilarDocumentsView;
 		this.viewInitialized = true;
 
 		// Ensure the leaf is visible
@@ -347,15 +359,21 @@ export default class MyPlugin extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.applySettingsUpdate();
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.searchEngine.updateApiKey(this.settings.apiKey);
-		console.log("Similar documents view", this.similarDocumentsView)
-		
-		if(this.similarDocumentsView) {
-			this.similarDocumentsView.updateSettings(this.settings.similarityGradient)
+		this.applySettingsUpdate();
+	}
+
+	private applySettingsUpdate() {
+		console.log("MyPlugin: applySettingsUpdate called");
+		if (this.similarDocumentsView) {
+			console.log("Updating settings for SimilarDocumentsView");
+			this.similarDocumentsView.updateSettings(this.settings);
+		} else {
+			console.log("SimilarDocumentsView not initialized yet");
 		}
 	}
 

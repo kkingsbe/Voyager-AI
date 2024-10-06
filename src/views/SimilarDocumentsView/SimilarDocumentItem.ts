@@ -38,7 +38,7 @@ export class SimilarDocumentItem {
     }
 
     private createNavFile(): HTMLElement {
-        const navFile = this.container.createEl('div', { cls: 'nav-file' });
+        const navFile = this.container.createEl('div', { cls: 'similar-document-item' });
         const navFileTitle = navFile.createEl('div', { cls: 'nav-file-title' });
         
         navFileTitle.style.display = 'flex';
@@ -138,5 +138,9 @@ export class SimilarDocumentItem {
 
     public getTitle(): string {
         return this.doc.title;
+    }
+
+    public getElement(): HTMLElement {
+        return this.navFile;
     }
 }

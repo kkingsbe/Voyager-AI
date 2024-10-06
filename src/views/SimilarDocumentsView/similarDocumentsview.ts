@@ -153,21 +153,31 @@ export class SimilarDocumentsView extends ItemView {
         this.documentItems = []; // Clear previous items
         console.log("=== scores === ", similarDocuments.map(doc => doc.score));
 
+        // Remove existing refresh button
+        const existingButton = container.querySelectorAll('.similar-documents-refresh');
+        if (existingButton) {
+            existingButton.forEach(button => button.remove());
+        }
+
         if (similarDocuments.length === 0) {
             similarDocsSection.createEl('div', { text: 'No similar documents found.', cls: 'nav-file' });
         } else {
             const maxScore = Math.max(...similarDocuments.map(doc => doc.score));
             const minScore = Math.min(...similarDocuments.map(doc => doc.score));
-            similarDocuments.forEach((doc, index) => {
-                const item = new SimilarDocumentItem(similarDocsSection as HTMLElement, doc, minScore, maxScore, index, this.colorUtils, this.plugin);
-                this.documentItems.push(item);
-            });
-        }
+            
+            // Use Promise.all to create all items first
+            const itemPromises = similarDocuments.map((doc, index) => 
+                new Promise<SimilarDocumentItem>((resolve) => {
+                    setTimeout(() => {
+                        const item = new SimilarDocumentItem(similarDocsSection as HTMLElement, doc, minScore, maxScore, index, this.colorUtils, this.plugin);
+                        item.getElement().style.animationDelay = `${index * 50}ms`; // Stagger the animation
+                        resolve(item);
+                    }, index * 5); // Stagger the creation
+                })
+            );
 
-        // Remove existing refresh button
-        const existingButton = container.querySelectorAll('.similar-documents-refresh');
-        if (existingButton) {
-            existingButton.forEach(button => button.remove());
+            // Wait for all items to be created
+            this.documentItems = await Promise.all(itemPromises);
         }
 
         // Add the refresh button at the bottom

@@ -387,19 +387,12 @@ export default class MyPlugin extends Plugin {
 	}
 
 	loadStyles() {
-		const styleEl = document.createElement('style');
-		styleEl.id = 'voyager-plugin-styles';
-		styleEl.textContent = `
-			.voyager-highlight-keyword {
-				background-color: yellow !important;
-				color: black !important;
-				padding: 2px !important;
-				border-radius: 3px !important;
-				display: inline !important;
-			}
-		`;
-		document.head.appendChild(styleEl);
-		console.log("Styles loaded");
+		const linkEl = document.createElement('link');
+		linkEl.id = 'voyager-plugin-styles';
+		linkEl.rel = 'stylesheet';
+		linkEl.href = 'path/to/your/styles.css'; // Update this path to your CSS file
+		document.head.appendChild(linkEl);
+		console.log("External styles loaded");
 	}
 
 	private addSummaryButton() {

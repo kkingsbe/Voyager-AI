@@ -6,10 +6,12 @@ export class DocumentCard {
     private summaryContainer: HTMLElement;
 
     constructor(private plugin: MyPlugin, private documentId: string, private title: string, private score: number) {
+        console.log(`DocumentCard constructed for ${this.title}`);
         this.card = this.createCard();
     }
 
     private createCard(): HTMLElement {
+        console.log(`Creating card for ${this.title}`);
         const card = document.createElement('div');
         card.className = 'similar-document-card';
         card.style.display = 'none';
@@ -19,6 +21,7 @@ export class DocumentCard {
         card.style.borderRadius = '4px';
         card.style.overflow = 'auto';
         card.style.height = '200px';
+        card.style.position = 'relative'
 
         const cardHeader = card.createEl('div', { cls: 'card-header' });
         cardHeader.style.marginBottom = '10px';
@@ -33,6 +36,7 @@ export class DocumentCard {
 
         this.summaryContainer = card.createEl('div', { cls: 'summary-container' });
 
+        console.log(`Card created for ${this.title}`);
         return card;
     }
 
@@ -41,8 +45,11 @@ export class DocumentCard {
     }
 
     show() {
-        console.log(`Showing card for: ${this.title}`);
+        console.log(`DocumentCard.show() called for: ${this.title}`);
+        console.log(`Card display before: ${this.card.style.display}`);
         this.card.style.display = 'block';
+        console.log(`Card display after: ${this.card.style.display}`);
+        console.log(`Card dimensions: ${this.card.offsetWidth}x${this.card.offsetHeight}`);
         if (this.summaryContainer.childElementCount === 0) {
             this.generateAndStreamSummary();
         }

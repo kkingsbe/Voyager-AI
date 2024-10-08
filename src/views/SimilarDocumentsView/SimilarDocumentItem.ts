@@ -27,6 +27,7 @@ export class SimilarDocumentItem {
     ) {
         this.normalizedSimilarity = 1 - this.calculateNormalizedSimilarity(this.doc.score);
         this.navFile = this.createNavFile();
+        console.log(`Creating DocumentCard for ${doc.title}`);
         this.card = new DocumentCard(plugin, doc.id, doc.title, doc.score);
         this.cardContainer = this.createCardContainer();
         this.setupEventListeners();
@@ -113,10 +114,34 @@ export class SimilarDocumentItem {
     private showCard() {
         if (this.isCardVisible) return;
         console.log(`Actually showing card for: ${this.doc.title}`);
-        const cardElement = this.card.getElement();
-        this.cardContainer.style.height = `${cardElement.offsetHeight}px`;
-        this.card.show();
-        this.isCardVisible = true;
+        
+        // Add this line to log the card object
+        console.log('Card object:', this.card);
+        
+        // Ensure the card is ready to be displayed
+        if (this.card && typeof this.card.show === 'function') {
+            this.card.show();
+        } else {
+            console.error(`Card or show method not found for ${this.doc.title}`);
+        }
+        
+        // Add a small delay to allow for any asynchronous content loading
+        setTimeout(() => {
+            const cardElement = this.card.getElement();
+            if (cardElement) {
+                const cardHeight = cardElement.offsetHeight;
+                console.log(`Card height for ${this.doc.title}: ${cardHeight}px`);
+                
+                if (cardHeight > 0) {
+                    this.cardContainer.style.height = `${cardHeight}px`;
+                    this.isCardVisible = true;
+                } else {
+                    console.warn(`Card height is 0 for ${this.doc.title}`);
+                }
+            } else {
+                console.error(`Card element not found for ${this.doc.title}`);
+            }
+        }, 50);
     }
 
     private hideCard() {

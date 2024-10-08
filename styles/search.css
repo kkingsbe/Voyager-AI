@@ -1,0 +1,65 @@
+.contextual-search-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    font-size: 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    transition: all 0.3s ease;
+}
+
+.contextual-search-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-result-card {
+    padding: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    transition: background-color 0.3s, transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    animation: fadeIn 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+.search-result-card:not(.chat-message):hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+    color: var(--text-title);
+}
+
+.search-result-score {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.search-result-secondary-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 5px 0;
+}
+
+.contextual-search-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--text-title);
+    text-align: center;
+}
+
+/* ... (other search-related styles) ... */

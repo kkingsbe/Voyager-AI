@@ -5,7 +5,7 @@
 	"main": "main.js",
 	"scripts": {
 		"dev": "nodemon",
-		"prepare": "cpy manifest.json versions.json main.js styles.css .hotreload dist",
+		"prepare": "cpy manifest.json versions.json main.js .hotreload dist",
 		"deploy:local": "rimraf \"C:/Users/kking/OneDrive/Documents/School/.obsidian/plugins/voyager\" && ncp dist \"C:/Users/kking/OneDrive/Documents/School/.obsidian/plugins/voyager\"",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && npm run prepare && npm run deploy:local",
 		"build:dev": "npm run build && copy data.json.local C:\\Users\\kking\\OneDrive\\Documents\\School\\.obsidian\\plugins\\voyager\\data.json",
@@ -39,6 +39,9 @@
 		"cpy-cli": "^5.0.0",
 		"d3": "^7.9.0",
 		"dotenv": "^16.4.5",
+		"esbuild-copy-plugin": "^1.0.0",
+		"esbuild-plugin-postcss": "^0.2.1",
+		"esbuild-plugin-postcss2": "^0.1.2",
 		"jest": "^29.7.0",
 		"lodash": "^4.17.21",
 		"ncp": "^2.0.0",
@@ -46,6 +49,8 @@
 		"openai": "^4.61.0",
 		"pdf2json-browser": "^4.0.12",
 		"pdfjs-dist": "^4.6.82",
+		"postcss": "^8.4.47",
+		"postcss-import": "^16.1.0",
 		"socket.io-client": "^4.8.0",
 		"ts-jest": "^29.2.5",
 		"zod": "^3.23.8"

@@ -1,3 +1,4 @@
+import '../styles.css'
 import { EventRef, MarkdownPostProcessorContext, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { SearchEngine } from 'searchengine';
 import { v4 as uuidv4 } from 'uuid';
@@ -390,7 +391,8 @@ export default class MyPlugin extends Plugin {
 		const linkEl = document.createElement('link');
 		linkEl.id = 'voyager-plugin-styles';
 		linkEl.rel = 'stylesheet';
-		linkEl.href = 'path/to/your/styles.css'; // Update this path to your CSS file
+		//linkEl.href = 'path/to/your/styles.css'; // Update this path to your CSS file
+		linkEl.href = '../styles/old.styles.css';
 		document.head.appendChild(linkEl);
 		console.log("External styles loaded");
 	}

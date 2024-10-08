@@ -1,0 +1,79 @@
+.chat-message {
+    cursor: default;
+    position: relative;
+    padding-right: 70px;
+    margin-bottom: 10px;
+    animation: none !important;
+    transition: none !important;
+}
+
+.chat-message:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.chat-copy-button {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 5px 10px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+
+.chat-copy-button:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.chat-copy-button:active {
+    background-color: var(--background-modifier-active);
+}
+
+.chat-copy-button svg {
+    display: block;
+}
+
+
+.search-result-card {
+    padding: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    transition: background-color 0.3s, transform 0.3s ease, box-shadow 0.3s ease; /* Add transform transition with ease */
+    cursor: pointer;
+    position: relative;
+    animation: fadeIn 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+.search-result-card:not(.chat-message):hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+    color: var(--text-title);
+}
+
+.search-result-score {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.search-result-secondary-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 5px 0;
+}

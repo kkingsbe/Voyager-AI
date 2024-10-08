@@ -1,6 +1,9 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import path from "path";
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const banner =
 `/*
@@ -11,11 +14,18 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === "production");
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const outdir = path.join(__dirname, "dist");
+
+console.log(`Build starting. Output directory: ${outdir}`);
+console.log(`Production mode: ${prod}`);
+
 const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ["main.ts"],
+	entryPoints: ["main.ts", "styles.css"],
 	bundle: true,
 	external: [
 		"obsidian",
@@ -37,16 +47,39 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: "main.js",
+	outdir: outdir,
 	minify: prod,
 	loader: {
 		'.js': 'jsx',
+		'.css': 'css',
 	},
+	plugins: [
+		{
+			name: 'css-bundle',
+			setup(build) {
+				build.onResolve({ filter: /^styles\.css$/ }, args => {
+					return { path: path.resolve(args.resolveDir, args.path) };
+				});
+			},
+		},
+	],
 });
 
+console.log("esbuild context created successfully");
+
 if (prod) {
+	console.log("Starting production build...");
 	await context.rebuild();
+	console.log("Production build completed");
 	process.exit(0);
 } else {
+	console.log("Starting watch mode...");
 	await context.watch();
+	console.log("Watch mode started");
 }
+
+console.log(`Build complete. Output directory: ${outdir}`);
+console.log('Contents of output directory:');
+fs.readdirSync(outdir).forEach(file => {
+	console.log(file);
+});

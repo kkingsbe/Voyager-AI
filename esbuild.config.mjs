@@ -69,7 +69,13 @@ console.log("esbuild context created successfully");
 
 if (prod) {
 	console.log("Starting production build...");
-	await context.rebuild();
+	try {
+		await context.rebuild();
+		console.log("Production build completed successfully");
+	} catch (error) {
+		console.error("Build failed:", error);
+		process.exit(1);
+	}
 	console.log("Production build completed");
 	process.exit(0);
 } else {

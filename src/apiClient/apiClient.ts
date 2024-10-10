@@ -11,8 +11,8 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'https://voyager-backend.onrender.com';
-    // private baseUrl: string = 'http://localhost:3000';
+    // private baseUrl: string = 'https://voyager-backend.onrender.com';
+    private baseUrl: string = 'http://localhost:3000';
 
     constructor(apiKey: string) {
         this.apiKey = apiKey;
@@ -72,6 +72,8 @@ export class ApiClient {
 
     async chatWebSocket(query: string, onChunk: (chunk: string) => void, onComplete: () => void, currentDocumentId?: string) {
         const socket = io(this.baseUrl);
+
+        console.log("Initializing websocket connection with base url:", this.baseUrl);
 
         socket.on('connect', () => {
             console.log('Connected to WebSocket');

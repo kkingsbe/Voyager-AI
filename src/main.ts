@@ -11,6 +11,7 @@ import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
 import { SimilarDocumentsView } from './views/SimilarDocumentsView/similarDocumentsview';
 
+
 export interface VoyagerSimilarityGradient {
 	name: string;
 	startColor: string;
@@ -388,13 +389,13 @@ export default class MyPlugin extends Plugin {
 	}
 
 	loadStyles() {
-		const linkEl = document.createElement('link');
-		linkEl.id = 'voyager-plugin-styles';
-		linkEl.rel = 'stylesheet';
-		//linkEl.href = 'path/to/your/styles.css'; // Update this path to your CSS file
-		linkEl.href = '../styles/old.styles.css';
-		document.head.appendChild(linkEl);
-		console.log("External styles loaded");
+		// const linkEl = document.createElement('link');
+		// linkEl.id = 'voyager-plugin-styles';
+		// linkEl.rel = 'stylesheet';
+		// //linkEl.href = 'path/to/your/styles.css'; // Update this path to your CSS file
+		// linkEl.href = '../main.css';
+		// document.head.appendChild(linkEl);
+		// console.log("External styles loaded");
 	}
 
 	private addSummaryButton() {

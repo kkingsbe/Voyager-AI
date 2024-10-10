@@ -77,3 +77,33 @@
     color: var(--text-muted);
     margin: 0 0 5px 0;
 }
+
+.example-prompts-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.example-prompt-button {
+    background-color: var(--interactive-accent);
+    color: var(--text-secondary);
+    border: none;
+    padding: 8px 12px;
+    margin: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.example-prompt-button:hover {
+    background-color: var(--interactive-accent-hover);
+    color: var(--text-on-accent);
+    transform: translateY(-2px);
+}
+
+.example-prompt-button:active {
+    transform: translateY(0);
+}

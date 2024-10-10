@@ -1,11 +1,13 @@
 import { App, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
+import { ExamplePrompts, Prompt } from '../components/ExamplePrompts';
 
 export class ChatModal extends Modal {
 	private apiClient: ApiClient;
 	private inputField: HTMLInputElement;
 	private chatContainer: HTMLElement;
 	private messageHistory: { sender: string; message: string }[] = [];
+	private examplePromptsContainer: HTMLElement;
 
 	constructor(app: App, apiClient: ApiClient) {
 		super(app);
@@ -14,7 +16,8 @@ export class ChatModal extends Modal {
 
 	onOpen() {
 		this.createModalContent();
-		this.inputField.focus();
+		// Focus the input field after a short delay
+		setTimeout(() => this.inputField.focus(), 10);
 	}
 
 	onClose() {
@@ -27,6 +30,9 @@ export class ChatModal extends Modal {
 
 		const header = contentEl.createEl('h2', { text: 'Chat with Voyager' });
 		header.classList.add('contextual-search-header');
+
+		this.examplePromptsContainer = contentEl.createEl('div', { cls: 'example-prompts-container' });
+		this.createExamplePrompts();
 
 		this.chatContainer = contentEl.createEl('div', { cls: 'chat-container' });
 		this.chatContainer.classList.add('contextual-search-results');
@@ -43,6 +49,8 @@ export class ChatModal extends Modal {
 		const closeButton = footer.createEl('button', { text: 'Close' });
 		closeButton.classList.add('contextual-search-close-button');
 		closeButton.addEventListener('click', () => this.close());
+
+		this.updateExamplePromptsVisibility();
 	}
 
 	private async onKeyPress(event: KeyboardEvent) {
@@ -83,11 +91,13 @@ export class ChatModal extends Modal {
 			this.messageHistory.push({ sender: 'Voyager', message: content });
 		}
 		this.renderMessages();
+		this.updateExamplePromptsVisibility();
 	}
 
 	private addMessageToChat(sender: string, message: string) {
 		this.messageHistory.push({ sender, message });
 		this.renderMessages();
+		this.updateExamplePromptsVisibility();
 	}
 
 	private renderMessages() {
@@ -116,92 +126,6 @@ export class ChatModal extends Modal {
 				this.copyToClipboard(textToCopy);
 			});
 		});
-	}
-
-	private renderMarkdownWithCustomLinks(markdown: string, element: HTMLElement) {
-		console.log('Rendering markdown:', markdown);
-		const linkRegex = /\[\[(.*?)\]\]/g;
-		let lastIndex = 0;
-		let match;
-		let linkCount = 0;
-
-		while ((match = linkRegex.exec(markdown)) !== null) {
-			linkCount++;
-			// Add text before the link
-			if (match.index > lastIndex) {
-				element.appendText(markdown.slice(lastIndex, match.index));
-			}
-
-			// Create link element
-			const linkText = match[1];
-			console.log('Creating link for:', linkText);
-			const link = element.createEl('a', { text: linkText, cls: 'internal-link' });
-			link.addEventListener('click', (event) => {
-				console.log('Link clicked:', linkText);
-				event.preventDefault();
-				this.navigateToFile(linkText);
-			});
-
-			lastIndex = linkRegex.lastIndex;
-		}
-
-		// Add any remaining text after the last link
-		if (lastIndex < markdown.length) {
-			element.appendText(markdown.slice(lastIndex));
-		}
-
-		console.log(`Created ${linkCount} links`);
-	}
-
-	private renderSimplifiedMarkdown(markdown: string, element: HTMLElement) {
-		console.log('Rendering simplified markdown:', markdown);
-		const lines = markdown.split('\n');
-		const linkRegex = /\[\[(.*?)\]\]/g;
-
-		lines.forEach((line, index) => {
-			let lastIndex = 0;
-			let match;
-
-			while ((match = linkRegex.exec(line)) !== null) {
-				// Add text before the link
-				if (match.index > lastIndex) {
-					element.appendText(line.slice(lastIndex, match.index));
-				}
-
-				// Create link element
-				const linkText = match[1];
-				const link = element.createEl('a', { text: linkText, cls: 'internal-link' });
-				link.addEventListener('click', (event) => {
-					event.preventDefault();
-					this.navigateToFile(linkText);
-				});
-
-				lastIndex = linkRegex.lastIndex;
-			}
-
-			// Add any remaining text after the last link
-			if (lastIndex < line.length) {
-				element.appendText(line.slice(lastIndex));
-			}
-
-			// Add a newline element if it's not the last line
-			if (index < lines.length - 1) {
-				element.createEl('br');
-			}
-		});
-	}
-
-	private navigateToFile(fileName: string) {
-		console.log('Navigating to:', fileName);
-		const file = this.app.metadataCache.getFirstLinkpathDest(fileName, '');
-		if (file) {
-			console.log('File found:', file.path);
-			this.app.workspace.getLeaf().openFile(file);
-			this.close();
-		} else {
-			console.log('File not found:', fileName);
-			new Notice(`File not found: ${fileName}`);
-		}
 	}
 
 	private copyToClipboard(text: string) {
@@ -239,5 +163,22 @@ export class ChatModal extends Modal {
 			console.error('Error in chat:', error);
 			this.addMessageToChat('Error', 'An error occurred while processing your request.');
 		}
+	}
+
+	private updateExamplePromptsVisibility() {
+		if (this.messageHistory.length === 0) {
+			this.examplePromptsContainer.style.display = 'flex';
+		} else {
+			this.examplePromptsContainer.style.display = 'none';
+		}
+	}
+
+	private createExamplePrompts() {
+		const prompts: Prompt[] = [
+			{ label: 'Summarize', fullPrompt: 'Summarize the current document' },
+			{ label: 'Explain', fullPrompt: 'Explain the main concepts in this document' },
+			{ label: 'Questions', fullPrompt: 'Generate questions about this document' }
+		];
+		new ExamplePrompts(this.examplePromptsContainer, prompts, (prompt) => this.sendAutomaticMessage(prompt));
 	}
 }

@@ -85,73 +85,91 @@ export class SimilarDocumentItem {
             this.plugin.app.workspace.openLinkText(this.doc.title, '');
         });
 
-        this.navFile.addEventListener('mouseenter', () => this.handleMouseEnter());
-        this.navFile.addEventListener('mouseleave', () => this.handleMouseLeave());
-        this.cardContainer.addEventListener('mouseenter', () => this.handleMouseEnter());
-        this.cardContainer.addEventListener('mouseleave', () => this.handleMouseLeave());
-    }
+        const showCardHandler = () => {
+            if (this.hoverTimeout) {
+                clearTimeout(this.hoverTimeout);
+            }
+            this.hoverTimeout = setTimeout(() => this.showCard(), 200);
+        };
+        const hideCardHandler = () => {
+            if (this.hoverTimeout) {
+                clearTimeout(this.hoverTimeout);
+            }
+            this.hideCard();
+        };
 
-    private handleMouseEnter() {
-        // console.log(`Mouse enter: ${this.doc.title}`);
-        if (this.hoverTimeout) {
-            clearTimeout(this.hoverTimeout);
-        }
-        this.hoverTimeout = setTimeout(() => {
-            console.log(`Showing card for: ${this.doc.title}`);
-            this.showCard();
-        }, 500);
-    }
+        this.navFile.addEventListener('mouseenter', showCardHandler);
+        this.cardContainer.addEventListener('mouseenter', showCardHandler);
+        
+        const handleMouseLeave = (event: MouseEvent) => {
+            const relatedTarget = event.relatedTarget as Node;
+            if (!this.navFile.contains(relatedTarget) && !this.cardContainer.contains(relatedTarget)) {
+                hideCardHandler();
+            }
+        };
 
-    private handleMouseLeave() {
-        // console.log(`Mouse leave: ${this.doc.title}`);
-        if (this.hoverTimeout) {
-            clearTimeout(this.hoverTimeout);
-            this.hoverTimeout = null;
-        }
-        this.hideCard();
+        this.navFile.addEventListener('mouseleave', handleMouseLeave);
+        this.cardContainer.addEventListener('mouseleave', handleMouseLeave);
+
+        // Add a global mouse move listener to handle cases when the mouse leaves the sidebar
+        document.addEventListener('mousemove', (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (!this.navFile.contains(target) && !this.cardContainer.contains(target)) {
+                hideCardHandler();
+            }
+        });
     }
 
     private showCard() {
         if (this.isCardVisible) return;
-        console.log(`Actually showing card for: ${this.doc.title}`);
+        console.log(`Preparing to show card for: ${this.doc.title}`);
         
-        // Add this line to log the card object
-        console.log('Card object:', this.card);
-        
-        // Ensure the card is ready to be displayed
-        if (this.card && typeof this.card.show === 'function') {
-            this.card.show();
-        } else {
-            console.error(`Card or show method not found for ${this.doc.title}`);
+        if (this.hoverTimeout) {
+            clearTimeout(this.hoverTimeout);
         }
         
-        // Add a small delay to allow for any asynchronous content loading
-        setTimeout(() => {
-            const cardElement = this.card.getElement();
-            if (cardElement) {
-                const cardHeight = cardElement.offsetHeight;
-                console.log(`Card height for ${this.doc.title}: ${cardHeight}px`);
+        this.hoverTimeout = setTimeout(() => {
+            console.log(`Showing card for: ${this.doc.title}`);
+            if (this.card && typeof this.card.show === 'function') {
+                this.card.show();
+                this.isCardVisible = true;
                 
-                if (cardHeight > 0) {
-                    this.cardContainer.style.height = `${cardHeight}px`;
-                    this.isCardVisible = true;
-                } else {
-                    console.warn(`Card height is 0 for ${this.doc.title}`);
-                }
+                setTimeout(() => {
+                    const cardElement = this.card.getElement();
+                    if (cardElement) {
+                        const cardHeight = cardElement.offsetHeight;
+                        console.log(`Card height for ${this.doc.title}: ${cardHeight}px`);
+                        
+                        if (cardHeight > 0) {
+                            this.cardContainer.style.height = `${cardHeight}px`;
+                        } else {
+                            console.warn(`Card height is 0 for ${this.doc.title}`);
+                        }
+                    } else {
+                        console.error(`Card element not found for ${this.doc.title}`);
+                    }
+                }, 50);
             } else {
-                console.error(`Card element not found for ${this.doc.title}`);
+                console.error(`Card or show method not found for ${this.doc.title}`);
             }
-        }, 50);
+        }, 200); // Changed to 200ms delay
     }
 
     private hideCard() {
         if (!this.isCardVisible) return;
-        console.log(`Hiding card for: ${this.doc.title}`);
-        this.cardContainer.style.height = '0';
-        setTimeout(() => {
-            this.card.hide();
-            this.isCardVisible = false;
-        }, 300);
+        
+        if (this.hoverTimeout) {
+            clearTimeout(this.hoverTimeout);
+        }
+        
+        this.hoverTimeout = setTimeout(() => {
+            console.log(`Hiding card for: ${this.doc.title}`);
+            this.cardContainer.style.height = '0';
+            setTimeout(() => {
+                this.card.hide();
+                this.isCardVisible = false;
+            }, 300);
+        }, 200);
     }
 
     public updateColor() {

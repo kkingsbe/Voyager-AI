@@ -20,7 +20,7 @@ export class DocumentCard {
         card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         card.style.borderRadius = '4px';
         card.style.overflow = 'auto';
-        card.style.height = '200px';
+        card.style.height = '400px';
         card.style.position = 'relative'
 
         const cardHeader = card.createEl('div', { cls: 'card-header' });

@@ -1,6 +1,5 @@
 import { App, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
-import { MarkdownView } from "obsidian";
 
 export class ChatModal extends Modal {
 	private apiClient: ApiClient;
@@ -117,9 +116,6 @@ export class ChatModal extends Modal {
 				this.copyToClipboard(textToCopy);
 			});
 		});
-
-		// Scroll to the bottom of the chat container
-		this.chatContainer.scrollTo({ top: this.chatContainer.scrollHeight, behavior: 'smooth' });
 	}
 
 	private renderMarkdownWithCustomLinks(markdown: string, element: HTMLElement) {

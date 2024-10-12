@@ -48,20 +48,20 @@ export default class MyPlugin extends Plugin {
 	private similarDocumentsView: SimilarDocumentsView | null = null;
 	private viewInitialized = false;
 
-	private addNotificationBell() {
-		this.notificationBell = this.addStatusBarItem();
-		this.notificationBell.addClass('mod-clickable');
-		this.notificationBell.addClass('notification-bell-container');
-		this.notificationBell.innerHTML = `
-			<span class="notification-bell">🔔</span>
-			<span class="notification-count">${this.notificationCount}</span>
-		`;
-		this.notificationBell.setAttribute('aria-label', 'Notifications');
-		this.notificationBell.addEventListener('click', () => {
-			new Notice('Notifications clicked!');
-			// TODO: Implement notification functionality
-		});
-	}
+	// private addNotificationBell() {
+	// 	this.notificationBell = this.addStatusBarItem();
+	// 	this.notificationBell.addClass('mod-clickable');
+	// 	this.notificationBell.addClass('notification-bell-container');
+	// 	this.notificationBell.innerHTML = `
+	// 		<span class="notification-bell">🔔</span>
+	// 		<span class="notification-count">${this.notificationCount}</span>
+	// 	`;
+	// 	this.notificationBell.setAttribute('aria-label', 'Notifications');
+	// 	this.notificationBell.addEventListener('click', () => {
+	// 		new Notice('Notifications clicked!');
+	// 		// TODO: Implement notification functionality
+	// 	});
+	// }
 
 	async onload() {
 		await this.loadSettings();
@@ -93,7 +93,7 @@ export default class MyPlugin extends Plugin {
 			id: 'open-chat-modal',
 			name: 'Open Chat Modal',
 			callback: () => {
-				new ChatModal(this.app, this.searchEngine.apiClient).open();
+				new ChatModal(this, this.searchEngine.apiClient).open();
 			}
 		});
 
@@ -401,8 +401,10 @@ export default class MyPlugin extends Plugin {
 	private addSummaryButton() {
 		this.summaryButton = this.addStatusBarItem();
 		this.summaryButton.addClass('mod-clickable');
-		this.summaryButton.innerHTML = '📝';
-		this.summaryButton.setAttribute('aria-label', 'Summarize Document');
+		
+		const emojiSpan = this.summaryButton.createSpan({ text: '📝' });
+		
+		this.summaryButton.setAttr('aria-label', 'Summarize Document');
 		this.summaryButton.addEventListener('click', () => {
 			this.summarizeActiveDocument();
 		});
@@ -413,7 +415,7 @@ export default class MyPlugin extends Plugin {
 		console.log("Summarizing active document", activeFile);
 		if (activeFile) {
 			new Notice('Summarizing document: ' + activeFile.name);
-			const chatModal = new ChatModal(this.app, this.searchEngine.apiClient);
+			const chatModal = new ChatModal(this, this.searchEngine.apiClient);
 			chatModal.open();
 			
 			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;

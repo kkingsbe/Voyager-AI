@@ -5,7 +5,7 @@
 	"main": "main.js",
 	"scripts": {
 		"dev": "nodemon",
-		"prepare": "cpy manifest.json versions.json .hotreload dist",
+		"prepare": "cpy manifest.json versions.json .hotreload dist && cpy src/resources/**/* dist/resources",
 		"deploy:local": "rimraf \"C:/Users/kking/OneDrive/Documents/School/.obsidian/plugins/voyager\" && ncp dist \"C:/Users/kking/OneDrive/Documents/School/.obsidian/plugins/voyager\"",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && npm run prepare && npm run deploy:local",
 		"build:dev": "npm run build && copy data.json.local C:\\Users\\kking\\OneDrive\\Documents\\School\\.obsidian\\plugins\\voyager\\data.json",

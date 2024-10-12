@@ -1,4 +1,4 @@
-import { App, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
+import { Plugin, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
 import { ExamplePrompts, Prompt } from '../components/ExamplePrompts';
 
@@ -8,9 +8,11 @@ export class ChatModal extends Modal {
 	private chatContainer: HTMLElement;
 	private messageHistory: { sender: string; message: string }[] = [];
 	private examplePromptsContainer: HTMLElement;
+	private plugin: Plugin;
 
-	constructor(app: App, apiClient: ApiClient) {
-		super(app);
+	constructor(plugin: Plugin, apiClient: ApiClient) {
+		super(plugin.app);
+		this.plugin = plugin;
 		this.apiClient = apiClient;
 	}
 
@@ -118,6 +120,10 @@ export class ChatModal extends Modal {
 
 			const copyButton = messageEl.createEl('button', { cls: 'chat-copy-button' });
 			copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+			
+			// const iconSrc = this.app.vault.configDir + '/plugins/voyager/resources/copyicon.svg';
+			// console.log("iconSrc", iconSrc);
+			// copyButton.createEl('img', { attr: { src: iconSrc } }); 
 			copyButton.setAttribute('aria-label', 'Copy message');
 			copyButton.addEventListener('click', (e) => {
 				e.preventDefault();

@@ -8,9 +8,8 @@ export class CommentIconWidget extends WidgetType {
     }
 
     toDOM() {
-        const span = document.createElement("span");
-        span.innerHTML = "💬"; // Changed the icon to a comment icon
-        span.className = "voyager-comment-icon";
+        const span = document.createSpan({ cls: "voyager-comment-icon" });
+        const emojiSpan = span.createSpan({ text: '📝' });
         
         span.addEventListener('click', (e) => {
             e.preventDefault();
@@ -29,12 +28,12 @@ export class CommentIconWidget extends WidgetType {
         modalContent.className = 'voyager-comments-modal-content';
 
         this.matchedComments.forEach(comment => {
-            const commentDiv = document.createElement('div');
-            commentDiv.className = 'voyager-comment';
-            commentDiv.innerHTML = `
-                <strong>Highlighted Text:</strong> ${comment.source_text}<br>
-                <strong>Comment:</strong> ${comment.comment_text}
-            `;
+            const commentDiv = document.createDiv({ cls: 'voyager-comment' });
+            commentDiv.createEl('strong', { text: 'Highlighted Text:' }).createEl('br');
+            commentDiv.createEl('span', { text: comment.source_text });
+            commentDiv.createEl('br');
+            commentDiv.createEl('strong', { text: 'Comment:' }).createEl('br');
+            commentDiv.createEl('span', { text: comment.comment_text });
             modalContent.appendChild(commentDiv);
         });
 

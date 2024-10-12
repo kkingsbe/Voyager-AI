@@ -11,7 +11,6 @@ import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
 import { SimilarDocumentsView } from './views/SimilarDocumentsView/similarDocumentsview';
 
-
 export interface VoyagerSimilarityGradient {
 	name: string;
 	startColor: string;
@@ -22,7 +21,8 @@ export interface VoyagerSettings {
 	apiKey: string;
 	autoEmbedOnEdit: boolean;
 	similarityGradient: VoyagerSimilarityGradient,
-	similarityWindow: number
+	similarityWindow: number,
+	indexWhitelist: string[] // A list of files to index, if autoEmbedOnEdit is disabled
 }
 
 const DEFAULT_SETTINGS: VoyagerSettings = {
@@ -33,7 +33,8 @@ const DEFAULT_SETTINGS: VoyagerSettings = {
 		startColor: "#009FFF",
 		endColor: "#ec2F4B"
 	},
-	similarityWindow: 200 //characters
+	similarityWindow: 200, //characters
+	indexWhitelist: []
 }
 
 export default class MyPlugin extends Plugin {
@@ -108,8 +109,9 @@ export default class MyPlugin extends Plugin {
 		// Add the auto-embed listener
 		this.autoEmbedListener = this.app.vault.on('modify', debounce(async (file: TFile) => {
 			if (file instanceof TFile) {
-				if(this.settings.autoEmbedOnEdit) {
-					//new Notice(`Embedding document ${file.name}`);
+				// If autoEmbedOnEdit is enabled, or the file is in the indexWhitelist, embed the document
+				if(this.settings.autoEmbedOnEdit || this.settings.indexWhitelist.includes(file.path)) {
+					new Notice(`Embedding document ${file.name}`);
 					await this.embedDocument(file);
 				}
 			}

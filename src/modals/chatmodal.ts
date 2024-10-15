@@ -1,6 +1,7 @@
 import { Plugin, Modal, MarkdownRenderer, Component, Notice } from "obsidian";
 import { ApiClient } from "apiClient/apiClient";
 import { ExamplePrompts, Prompt } from '../components/ExamplePrompts';
+import { FileEditor } from "lib/fileEditor";
 
 export class ChatModal extends Modal {
 	private apiClient: ApiClient;
@@ -8,12 +9,12 @@ export class ChatModal extends Modal {
 	private chatContainer: HTMLElement;
 	private messageHistory: { sender: string; message: string }[] = [];
 	private examplePromptsContainer: HTMLElement;
-	private plugin: Plugin;
+	private fileEditor: FileEditor;
 
-	constructor(plugin: Plugin, apiClient: ApiClient) {
+	constructor(plugin: Plugin, apiClient: ApiClient, fileEditor: FileEditor) {
 		super(plugin.app);
-		this.plugin = plugin;
 		this.apiClient = apiClient;
+		this.fileEditor = fileEditor;
 	}
 
 	onOpen() {

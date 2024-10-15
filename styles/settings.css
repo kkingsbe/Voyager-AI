@@ -1,6 +1,7 @@
 .voyager-settings-tabs {
     display: flex;
     margin-bottom: 20px;
+    gap: 10px;
 }
 
 .voyager-tab {
@@ -109,3 +110,24 @@
     width: 100%;
     padding-right: 30px; /* Make room for the clear button */
   }
+
+.voyager-editable-files-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.voyager-editable-files-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.voyager-editable-files-list button {
+    padding: 2px 6px;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}

@@ -1,6 +1,8 @@
 import axios from "axios";
 import { DocumentGraphResponse } from '../modals/documentGraphModal/types';
 import io from 'socket.io-client';
+import { FileEditor } from "lib/fileEditor";
+import { ClientSideToolManager } from "clientSideToolManager/clientSideToolManager";
 
 export interface SearchResult {
     score: number;
@@ -11,13 +13,18 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    private baseUrl: string = 'https://voyager-backend.onrender.com';
-    // private baseUrl: string = 'http://localhost:3000';
+    // private baseUrl: string = 'https://voyager-backend.onrender.com';
+    private baseUrl: string = 'http://localhost:3000';
 
-    constructor(apiKey: string) {
+    private fileEditor: FileEditor;
+    private clientSideToolManager: ClientSideToolManager;
+
+    constructor(apiKey: string, fileEditor: FileEditor) {
         this.apiKey = apiKey;
+        this.fileEditor = fileEditor;
 
         console.log("Api client with api key:", this.apiKey);
+        this.clientSideToolManager = new ClientSideToolManager(fileEditor);
     }
 
     async embedDocument(title: string, content: string, id: string, creationDate: string) {
@@ -91,6 +98,11 @@ export class ApiClient {
         socket.on('chatComplete', () => {
             onComplete();
             socket.disconnect();
+        });
+
+        socket.on('tool_call', (toolCall: any) => {
+            console.log("Received tool call:", toolCall);
+            this.clientSideToolManager.invokeToolCall(toolCall);
         });
 
         socket.on('error', (error: string) => {

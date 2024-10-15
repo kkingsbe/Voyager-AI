@@ -1,17 +1,21 @@
 import { ApiClient } from 'apiClient/apiClient';
+import { FileEditor } from 'lib/fileEditor';
+import MyPlugin from 'main';
 import { App, TFile } from 'obsidian';
 
 export class SearchEngine {
     app: App;
+    plugin: MyPlugin;
     apiClient: ApiClient;
 
-    constructor(app: App, apiKey: string) {
+    constructor(app: App, plugin: MyPlugin, apiKey: string) {
         this.app = app;
-        this.apiClient = new ApiClient(apiKey);
+        this.plugin = plugin;
+        this.apiClient = new ApiClient(apiKey, new FileEditor(app, plugin));
     }
 
     updateApiKey(apiKey: string) {
-        this.apiClient = new ApiClient(apiKey);
+        this.apiClient = new ApiClient(apiKey, new FileEditor(this.app, this.plugin));
     }
 
     async embedDocument(title: string, content: string, id: string, creationDate: string) {

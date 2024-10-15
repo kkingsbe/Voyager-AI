@@ -10,6 +10,7 @@ import { FileContentExtractor } from 'fileContentExtractor/FileContentExtractor'
 import { IComment, initializeHighlightPlugin } from './commentHighlighter';
 import { IndexedDocumentsModal } from 'modals/indexDocumentsModal';
 import { SimilarDocumentsView } from './views/SimilarDocumentsView/similarDocumentsview';
+import { FileEditor } from 'lib/fileEditor';
 
 export interface VoyagerSimilarityGradient {
 	name: string;
@@ -22,7 +23,8 @@ export interface VoyagerSettings {
 	autoEmbedOnEdit: boolean;
 	similarityGradient: VoyagerSimilarityGradient,
 	similarityWindow: number,
-	indexWhitelist: string[] // A list of files to index, if autoEmbedOnEdit is disabled
+	indexWhitelist: string[], // A list of files to index, if autoEmbedOnEdit is disabled
+	fileEditWhitelist: string[], // A list of files which Voyager can directly edit
 }
 
 const DEFAULT_SETTINGS: VoyagerSettings = {
@@ -34,7 +36,8 @@ const DEFAULT_SETTINGS: VoyagerSettings = {
 		endColor: "#ec2F4B"
 	},
 	similarityWindow: 200, //characters
-	indexWhitelist: []
+	indexWhitelist: [],
+	fileEditWhitelist: []
 }
 
 export default class MyPlugin extends Plugin {
@@ -94,7 +97,7 @@ export default class MyPlugin extends Plugin {
 			id: 'open-chat-modal',
 			name: 'Open Chat Modal',
 			callback: () => {
-				new ChatModal(this, this.searchEngine.apiClient).open();
+				new ChatModal(this, this.searchEngine.apiClient, new FileEditor(this.app, this)).open();
 			}
 		});
 
@@ -104,14 +107,14 @@ export default class MyPlugin extends Plugin {
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
-		this.searchEngine = new SearchEngine(this.app, this.settings.apiKey);
+		this.searchEngine = new SearchEngine(this.app, this, this.settings.apiKey);
 
 		// Add the auto-embed listener
 		this.autoEmbedListener = this.app.vault.on('modify', debounce(async (file: TFile) => {
 			if (file instanceof TFile) {
 				// If autoEmbedOnEdit is enabled, or the file is in the indexWhitelist, embed the document
 				if(this.settings.autoEmbedOnEdit || this.settings.indexWhitelist.includes(file.path)) {
-					new Notice(`Embedding document ${file.name}`);
+					// new Notice(`Embedding document ${file.name}`);
 					await this.embedDocument(file);
 				}
 			}
@@ -417,7 +420,7 @@ export default class MyPlugin extends Plugin {
 		console.log("Summarizing active document", activeFile);
 		if (activeFile) {
 			new Notice('Summarizing document: ' + activeFile.name);
-			const chatModal = new ChatModal(this, this.searchEngine.apiClient);
+			const chatModal = new ChatModal(this, this.searchEngine.apiClient, new FileEditor(this.app, this));
 			chatModal.open();
 			
 			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;

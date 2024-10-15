@@ -21,10 +21,12 @@ export class SettingsTab extends PluginSettingTab {
 		const tabsContainer = containerEl.createEl('div', { cls: 'voyager-settings-tabs' });
 		const generalTab = tabsContainer.createEl('button', { text: 'General', cls: 'voyager-tab active' });
 		const whitelistTab = tabsContainer.createEl('button', { text: 'Whitelisted Documents', cls: 'voyager-tab' });
+		const editableFilesTab = tabsContainer.createEl('button', { text: 'Editable Files', cls: 'voyager-tab' });
 
 		// Create content containers
 		const generalContent = containerEl.createEl('div', { cls: 'voyager-settings-content active' });
 		const whitelistContent = containerEl.createEl('div', { cls: 'voyager-settings-content' });
+		const editableFilesContent = containerEl.createEl('div', { cls: 'voyager-settings-content' });
 
 		// General settings
 		this.createGeneralSettings(generalContent);
@@ -32,9 +34,13 @@ export class SettingsTab extends PluginSettingTab {
 		// Whitelisted documents
 		this.createWhitelistSettings(whitelistContent);
 
+		// Editable files
+		this.createEditableFilesSettings(editableFilesContent);
+
 		// Tab switching logic
 		generalTab.addEventListener('click', () => this.switchTab(generalTab, generalContent));
 		whitelistTab.addEventListener('click', () => this.switchTab(whitelistTab, whitelistContent));
+		editableFilesTab.addEventListener('click', () => this.switchTab(editableFilesTab, editableFilesContent));
 	}
 
 	private switchTab(clickedTab: HTMLElement, content: HTMLElement) {
@@ -117,6 +123,43 @@ export class SettingsTab extends PluginSettingTab {
 				this.plugin.settings.indexWhitelist.splice(index, 1);
 				await this.plugin.saveSettings();
 				this.updateWhitelistDisplay(container);
+			});
+		});
+	}
+
+	private createEditableFilesSettings(container: HTMLElement) {
+		const editableFilesEl = container.createEl('div', { cls: 'voyager-editable-files-container' });
+
+		new Setting(editableFilesEl)
+			.setName('Whitelisted Documents')
+			.setDesc('Documents that will always be indexed, regardless of auto-embed settings')
+			.addButton(button => button
+				.setButtonText('Add Document')
+				.onClick(async () => {
+					const fileSelector = new FileSuggest(this.app);
+					const selectedFile = await fileSelector.waitForSelection();
+					if (selectedFile) {
+						this.plugin.settings.fileEditWhitelist.push(selectedFile.path);
+						await this.plugin.saveSettings();
+						this.updateEditableFilesDisplay(editableFilesEl);
+					}
+				}));
+
+		this.updateEditableFilesDisplay(editableFilesEl);
+	}
+
+	private updateEditableFilesDisplay(container: HTMLElement) {
+		const listEl = container.querySelector('.voyager-editable-files-list') || container.createEl('ul', { cls: 'voyager-editable-files-list' });
+		listEl.empty();
+
+		this.plugin.settings.fileEditWhitelist.forEach((path, index) => {
+			const listItem = listEl.createEl('li');
+			listItem.createSpan({ text: path });
+			const removeButton = listItem.createEl('button', { text: 'Remove' });
+			removeButton.addEventListener('click', async () => {
+				this.plugin.settings.fileEditWhitelist.splice(index, 1);
+				await this.plugin.saveSettings();
+				this.updateEditableFilesDisplay(container);
 			});
 		});
 	}

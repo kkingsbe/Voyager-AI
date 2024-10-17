@@ -1,3 +1,4 @@
+import { Notice } from "obsidian";
 import { ClientSideTool, ToolCallContext } from "../clientSideToolManager";
 
 interface IEditFileToolCall {
@@ -10,7 +11,7 @@ export class EditFileTool implements ClientSideTool<IEditFileToolCall> {
     
     async invoke(context: ToolCallContext<IEditFileToolCall>) {
         const { path, content } = context.toolCall;
-        console.log("Editing file", context);
+        new Notice(`Editing file ${path}`);
         await context.fileEditor.editFile(path, content);
     }
 }

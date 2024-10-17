@@ -13,8 +13,8 @@ export interface SearchResult {
 
 export class ApiClient {
     apiKey: string;
-    // private baseUrl: string = 'https://voyager-backend.onrender.com';
-    private baseUrl: string = 'http://localhost:3000';
+    private baseUrl: string = 'https://voyager-backend.onrender.com';
+    // private baseUrl: string = 'http://localhost:3000';
 
     private fileEditor: FileEditor;
     private clientSideToolManager: ClientSideToolManager;

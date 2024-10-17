@@ -1,4 +1,4 @@
-import { App } from "obsidian";
+import { App, Notice } from "obsidian";
 import MyPlugin from "main";
 
 /**
@@ -31,18 +31,24 @@ export class FileEditor {
     async editFile(path: string, newContent: string) {
         // Check if the file is whitelisted
         if (!this.isFileWhitelisted(path)) {
-            throw new Error(`File ${path} is not whitelisted for editing.`);
+            //throw new Error(`File ${path} is not whitelisted for editing.`);
+            new Notice(`File ${path} is not whitelisted for editing.`);
+            return;
         }
         
         try {
             const file = this.app.vault.getFileByPath(path);
             if (!file) {
-                throw new Error(`File ${path} not found`);
+                //throw new Error(`File ${path} not found`);
+                new Notice(`File ${path} not found`);
+                return;
             }
             await this.app.vault.modify(file, newContent);
         } catch (error) {
             console.error(`Failed to edit file ${path}:`, error);
-            throw new Error(`Failed to edit file ${path}: ${error.message}`);
+            //throw new Error(`Failed to edit file ${path}: ${error.message}`);
+            new Notice(`Failed to edit file ${path}: ${error.message}`);
+            return;
         }
     }
 }

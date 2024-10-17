@@ -382,6 +382,12 @@ export default class MyPlugin extends Plugin {
 		} else {
 			console.log("SimilarDocumentsView not initialized yet");
 		}
+
+		try {
+			this.searchEngine.updateApiKey(this.settings.apiKey);
+		} catch (error) {
+			console.error("Failed to update API key:", error);
+		}
 	}
 
 	updateNotificationCount(count: number) {

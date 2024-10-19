@@ -1,4 +1,4 @@
-import { App, Notice } from "obsidian";
+import { App, Notice, TFile } from "obsidian";
 import MyPlugin from "main";
 
 /**
@@ -22,6 +22,10 @@ export class FileEditor {
         return this.plugin.settings.fileEditWhitelist.includes(path);
     }
 
+    async getFile(path: string): Promise<TFile | null> {
+        return this.app.vault.getFileByPath(path);
+    }
+
     /**
      * Edits a file with the given new content.
      * @param path - The path to the file to edit.
@@ -37,7 +41,7 @@ export class FileEditor {
         }
         
         try {
-            const file = this.app.vault.getFileByPath(path);
+            const file = await this.getFile(path);
             if (!file) {
                 //throw new Error(`File ${path} not found`);
                 new Notice(`File ${path} not found`);

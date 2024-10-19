@@ -11,11 +11,11 @@ export class SearchEngine {
     constructor(app: App, plugin: MyPlugin, apiKey: string) {
         this.app = app;
         this.plugin = plugin;
-        this.apiClient = new ApiClient(apiKey, new FileEditor(app, plugin));
+        this.apiClient = new ApiClient(apiKey, new FileEditor(app, plugin), this.app);
     }
 
     updateApiKey(apiKey: string) {
-        this.apiClient = new ApiClient(apiKey, new FileEditor(this.app, this.plugin));
+        this.apiClient = new ApiClient(apiKey, new FileEditor(this.app, this.plugin), this.app);
     }
 
     async embedDocument(title: string, content: string, id: string, creationDate: string) {

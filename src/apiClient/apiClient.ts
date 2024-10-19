@@ -3,6 +3,7 @@ import { DocumentGraphResponse } from '../modals/documentGraphModal/types';
 import io from 'socket.io-client';
 import { FileEditor } from "lib/fileEditor";
 import { ClientSideToolManager } from "clientSideToolManager/clientSideToolManager";
+import { App } from "obsidian";
 
 export interface SearchResult {
     score: number;
@@ -16,15 +17,13 @@ export class ApiClient {
     private baseUrl: string = 'https://voyager-backend.onrender.com';
     // private baseUrl: string = 'http://localhost:3000';
 
-    private fileEditor: FileEditor;
     private clientSideToolManager: ClientSideToolManager;
 
-    constructor(apiKey: string, fileEditor: FileEditor) {
+    constructor(apiKey: string, fileEditor: FileEditor, app: App) {
         this.apiKey = apiKey;
-        this.fileEditor = fileEditor;
 
         console.log("Api client with api key:", this.apiKey);
-        this.clientSideToolManager = new ClientSideToolManager(fileEditor);
+        this.clientSideToolManager = new ClientSideToolManager(fileEditor, app);
     }
 
     async embedDocument(title: string, content: string, id: string, creationDate: string) {
@@ -100,9 +99,10 @@ export class ApiClient {
             socket.disconnect();
         });
 
-        socket.on('tool_call', (toolCall: any) => {
-            console.log("Received tool call:", toolCall);
-            this.clientSideToolManager.invokeToolCall(toolCall);
+        socket.on('tool_call', (data: any) => {
+            console.log("Received tool call:", data);
+            this.clientSideToolManager.invokeToolCall(data);
+            onChunk(data.toolCall.chatOutput);
         });
 
         socket.on('error', (error: string) => {

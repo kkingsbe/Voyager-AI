@@ -1,9 +1,11 @@
 import { FileEditor } from "lib/fileEditor";
 import { EditFileTool } from "./tools/editFIle";
+import { App } from "obsidian";
 
 export interface ToolCallContext<T> {
     fileEditor: FileEditor;
     toolCall: T;
+    app: App;
 }
 
 export interface ClientSideTool<T> {
@@ -14,11 +16,12 @@ export interface ClientSideTool<T> {
 export class ClientSideToolManager {
     private tools: Map<string, ClientSideTool<any>>;
     private fileEditor: FileEditor;
+    private app: App;
 
-    constructor(fileEditor: FileEditor) {
+    constructor(fileEditor: FileEditor, app: App) {
         this.tools = new Map<string, ClientSideTool<any>>();
         this.fileEditor = fileEditor;
-
+        this.app = app;
         this.addTool(new EditFileTool());
     }
 
@@ -35,7 +38,8 @@ export class ClientSideToolManager {
 
         await tool.invoke({
             fileEditor: this.fileEditor,
-            toolCall: toolCall.toolCall
+            toolCall: toolCall.toolCall,
+            app: this.app
         });
     }
 }

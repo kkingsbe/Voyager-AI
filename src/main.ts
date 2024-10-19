@@ -97,8 +97,8 @@ export default class MyPlugin extends Plugin {
 			id: 'open-chat-modal',
 			name: 'Open Chat Modal',
 			callback: () => {
-				new ChatModal(this, this.searchEngine.apiClient, new FileEditor(this.app, this)).open();
-			}
+				new ChatModal(this, this.searchEngine.apiClient).open();
+			} 
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
@@ -426,7 +426,7 @@ export default class MyPlugin extends Plugin {
 		console.log("Summarizing active document", activeFile);
 		if (activeFile) {
 			new Notice('Summarizing document: ' + activeFile.name);
-			const chatModal = new ChatModal(this, this.searchEngine.apiClient, new FileEditor(this.app, this));
+			const chatModal = new ChatModal(this, this.searchEngine.apiClient);
 			chatModal.open();
 			
 			const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
